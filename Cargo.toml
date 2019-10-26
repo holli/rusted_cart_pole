@@ -1,0 +1,29 @@
+[package]
+name = "rusted-cart-pole"
+version = "0.1.0"
+authors = ["Olli Huotari <olli.huotari@iki.fi>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# not by default
+[profile.release]
+debug = true
+
+
+[dependencies]
+# ferris-says = "0.1"
+quicksilver = "*"
+rand = "*"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+stdweb = "*"
+
+
+
+# [dependencies.web-sys]
+# version = "0.3.29"
+# features = [ "console" ]
+
+#[target."cfg(debug_assertions)".dependencies]
+#console_error_panic_hook = "0.1.5"
