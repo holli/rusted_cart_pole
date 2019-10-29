@@ -1,11 +1,12 @@
 #[allow(unused_imports)]
 use rand::distributions::{Distribution, Uniform};
 
-pub const CARTPOLE_MAX_X: f32 = 4.8;
+// pub const CARTPOLE_MAX_X: f32 = 4.8;
 pub const CARTPOLE_UPDATE_TIMESTEP: f32 = 0.02;
 
 // https://github.com/openai/gym/blob/master/gym/envs/classic_control/cartpole.py
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
+#[repr(C)]
 pub struct CartPole {
     pub x: f32, // x-axis [-CARTPOLE_MAX_X, CARTPOLE_MAX_X] == [-4.8, 4.8], same as in openaigym
     pub velocity: f32,
