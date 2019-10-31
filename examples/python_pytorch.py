@@ -23,31 +23,38 @@ print("Begin")
 ffi.cdef("""
     int callable_from_c(int);
 
-    typedef struct cart_pole_s {
-        float x, y, i, j;
-    } cart_pole_o;
+    typedef struct cart_pole {
+        float x, velocity, pole_angle, pole_velocity;
+    } cart_pole;
 
-    typedef void* cart_pole_episode;
+    typedef void* cart_pole_ptr;
 
-    cart_pole_episode cp_new();
-    cart_pole_o status(cart_pole_episode);
-    void step(cart_pole_episode, float force);
-    void free(cart_pole_episode);
+    cart_pole_ptr new();
+    void free(cart_pole_ptr);
+    cart_pole status(cart_pole_ptr);
+    void step(cart_pole_ptr, float force);
+
+    typedef void* draw_ptr
+    draw_ptr draw_new();
+    void draw_step(draw_ptr, float force);
+
 """)
 
 
 C = ffi.dlopen('/home/ohu/koodi/kesken/rusted_cart_pole/target/debug/librusted_cart_pole.so')
 
-pole = C.cp_new()
+pole = C.new()
 
 C.status(pole)
 C.status(pole)
 res = C.status(pole)
 
-print("Stepping")
-C.step(pole, 2)
-print("Stepped first")
-C.step(pole, 3)
+print("Stepping started")
+
+for i in range(20):
+    C.step(pole, 1)
+
+print("Stepped all")
 
 import ipdb; ipdb.set_trace()
 # import pdb; pdb.set_trace()

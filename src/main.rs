@@ -47,7 +47,7 @@ impl State for Draw {
         }
 
         // if force != 0.0 {
-            self.cart_pole.update(force);
+            self.cart_pole.step(force);
         // }
 
         if window.keyboard()[Key::Space].is_down() {

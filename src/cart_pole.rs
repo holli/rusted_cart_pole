@@ -1,7 +1,7 @@
 #[allow(unused_imports)]
 use rand::distributions::{Distribution, Uniform};
 
-// pub const CARTPOLE_MAX_X: f32 = 4.8;
+pub const CARTPOLE_MAX_X: f32 = 4.8;
 pub const CARTPOLE_UPDATE_TIMESTEP: f32 = 0.02;
 
 // https://github.com/openai/gym/blob/master/gym/envs/classic_control/cartpole.py
@@ -41,7 +41,7 @@ impl CartPole {
         }
     }
 
-    pub fn update(&mut self, force_input: f32) {
+    pub fn step(&mut self, force_input: f32) {
         let gravity = 9.8;
         let masscart = 1.0;
         let masspole = 0.5;

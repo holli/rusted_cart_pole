@@ -18,6 +18,10 @@ debug = true
 # ferris-says = "0.1"
 quicksilver = "*"
 rand = "*"
+plotters = "*"
+# piston = "*"
+systemstat = "0.1.4"
+piston_window = "0.105.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 stdweb = "*"
