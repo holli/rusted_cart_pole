@@ -14,17 +14,6 @@ extern crate piston_window;
 use rusted_cart_pole::*;
 use plotters::coord::Shift;
 
-
-pub struct PlotterCartPole<DB: DrawingBackend> {
-    root_area: DrawingArea<DB, Shift>,
-}
-
-impl<DB: DrawingBackend> PlotterCartPole<DB> {
-    pub fn cp_test(cp: CartPole, root: DrawingArea<DB, Shift>){
-        println!("CHARTPUILD");
-    }
-}
-
 // #[allow(dead_code)]
 // // fn plotter_cart_pole_test(cp: CartPole, root: DrawingArea<PistonBackend, plotters::coord::Shift>){
 // // fn plotter_cart_pole_test(cp: CartPole, root: DrawingArea<dyn DrawingBackend, plotters::coord::Shift>){
@@ -34,7 +23,10 @@ impl<DB: DrawingBackend> PlotterCartPole<DB> {
 // fn plotter_cart_pole_test(cp: CartPole, root: &'a DrawingArea<dyn DrawingBackend, plotters::coord::Shift>){
 // fn plotter_cart_pole<T: DrawingBackend>(cp: CartPole, root: DrawingArea<T, plotters::coord::Shift>){
 
-fn plotter_cart_pole<T: DrawingBackend>(cp: CartPole, root: DrawingArea<T, plotters::coord::Shift>){
+fn plotter_cart_pole<DB: DrawingBackend>(
+    cp: CartPole, root: DrawingArea<DB, plotters::coord::Shift>
+// ) -> Result<(), plotters::drawing::DrawingAreaError<DB>> {
+) -> Result<(), plotters::drawing::DrawingAreaErrorKind<DB::ErrorType>> {
     root.fill(&colors::WHITE);
     root.fill(&colors::BLUE);
 
