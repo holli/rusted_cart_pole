@@ -12,60 +12,36 @@ use plotters::style::colors;
 extern crate piston_window;
 // #[allow(unused_imports)]
 use rusted_cart_pole::*;
-use plotters::coord::Shift;
-
-// #[allow(dead_code)]
-// // fn plotter_cart_pole_test(cp: CartPole, root: DrawingArea<PistonBackend, plotters::coord::Shift>){
-// // fn plotter_cart_pole_test(cp: CartPole, root: DrawingArea<dyn DrawingBackend, plotters::coord::Shift>){
-// // fn plotter_cart_pole_test<T: DrawingArea>(cp: CartPole, root: T){
-// // fn plotter_cart_pole_test(cp: CartPole, root: DrawingArea<dyn DrawingBackend<ErrorType = DummyBackendError>, plotters::coord::Shift>){
-// // fn plotter_cart_pole_test(cp: CartPole, root: DrawingArea<dyn DrawingBackend<ErrorType = &std::io::Error>, plotters::coord::Shift>){
-// fn plotter_cart_pole_test(cp: CartPole, root: &'a DrawingArea<dyn DrawingBackend, plotters::coord::Shift>){
-// fn plotter_cart_pole<T: DrawingBackend>(cp: CartPole, root: DrawingArea<T, plotters::coord::Shift>){
+// use plotters::coord::Shift;
 
 fn plotter_cart_pole<DB: DrawingBackend>(
     cp: CartPole, root: DrawingArea<DB, plotters::coord::Shift>
-// ) -> Result<(), plotters::drawing::DrawingAreaError<DB>> {
 ) -> Result<(), plotters::drawing::DrawingAreaErrorKind<DB::ErrorType>> {
-    root.fill(&colors::WHITE);
-    root.fill(&colors::BLUE);
+    root.fill(&colors::WHITE)?;
 
     let y = 400;
-    // root.draw(&Rectangle::new([(10, 10), (100, 100)], Into::<ShapeStyle>::into(color).filled()));
-    root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()));
+    root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+
+    // let x = (cp.x+CARTPOLE_MAX_X) * self.window_size.x/(2.0*CARTPOLE_MAX_X);
+    let x = (cp.x+CARTPOLE_MAX_X) * 800.0/(2.0*CARTPOLE_MAX_X);
+    // let y = self.window_size.y - 10.0;
+    let x_width = 100.0;
+
+    // let screen_size = window.screen_size();
+
+    // Cart
+    root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+    root.draw(&Rectangle::new([((x-x_width/2.0) as i32, y-10), ((x+x_width/2.0) as i32, y+10)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+
+    // Pole
+    let pole_length = 100.0;
+    let pole_x = pole_length * cp.pole_angle.sin();
+    let pole_y = (pole_length * cp.pole_angle.cos()) as i32;
+    let points = [(x as i32, y as i32), ((x+pole_x) as i32, (y-pole_y) as i32)];
+    root.draw(&PathElement::new(points.to_vec(), Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+
+    Ok(())
 }
-
-
-// fn plotter_cart_pole(cp: CartPole, b: PistonBackend){
-// fn plotter_cart_pole(cp: CartPole, root: dyn DrawingBackend){
-
-    // let root = b.into_drawing_area();
-
-    // root.fill(&colors::WHITE);
-
-    // let y = 400;
-    // // root.draw(&Rectangle::new([(10, 10), (100, 100)], Into::<ShapeStyle>::into(color).filled()));
-    // root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()));
-
-    // // let x = (cp.x+CARTPOLE_MAX_X) * self.window_size.x/(2.0*CARTPOLE_MAX_X);
-    // let x = (cp.x+CARTPOLE_MAX_X) * 800.0/(2.0*CARTPOLE_MAX_X);
-    // // let y = self.window_size.y - 10.0;
-    // let x_width = 100.0;
-
-    // // let screen_size = window.screen_size();
-
-    // // Cart
-    // root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()));
-    // root.draw(&Rectangle::new([((x-x_width/2.0) as i32, y-10), ((x+x_width/2.0) as i32, y+10)], Into::<ShapeStyle>::into(&colors::BLACK).filled()));
-
-    // // Pole
-    // let pole_length = 100.0;
-    // let pole_x = pole_length * cp.pole_angle.sin();
-    // let pole_y = (pole_length * cp.pole_angle.cos()) as i32;
-    // let points = [(x as i32, y as i32), ((x+pole_x) as i32, (y-pole_y) as i32)];
-    // root.draw(&PathElement::new(points.to_vec(),
-    //                             Into::<ShapeStyle>::into(&colors::BLACK).filled()));
-// }
 
 
 fn main() {
