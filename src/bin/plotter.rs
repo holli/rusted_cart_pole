@@ -1,37 +1,61 @@
-use plotters::prelude::*;
-
 use piston_window::{EventLoop, PistonWindow, WindowSettings};
 use plotters::prelude::*;
-use systemstat::platform::common::Platform;
-use systemstat::System;
-use std::collections::vec_deque::VecDeque;
-
+// use std::collections::vec_deque::VecDeque;
+// use piston_window::{circle_arc, ellipse, line, rectangle, Event, Loop};
 
 extern crate piston_window;
 
-use piston_window::*;
+// use piston_window::*;
+
 
 fn main() {
     let mut window: PistonWindow = WindowSettings::new("Hello Piston!", (640, 480))
-        .exit_on_esc(true)
+        // .exit_on_esc(true)
+        // .controllers(false)
+        .samples(1)
         .build()
         .unwrap_or_else(|e| { panic!("Failed to build PistonWindow: {}", e) });
 
     // let e = window.next();
-    let e = window.next().unwrap();
+    // let e = window.next().unwrap();
     // window.draw_2d(&e, |_c, g, _y| {
     //     clear([0.5, 1.0, 0.5, 1.0], g);
     // });
 
-    for _ in 0..50 {
-        let e = window.next().unwrap();
-        window.draw_2d(&e, |_c, g, _y| {
-            clear([0.5, 1.0, 0.5, 1.0], g);
+    for i in 0..255 {
+        println!("Sleeping like a baby {}", i);
+        let tes = plotters::drawing::draw_piston_window(&mut window, |b| {
+            let root = b.into_drawing_area();
+            root.fill(&RGBColor(100, i, i))?;
+            println!("INSIDE {}", i);
+            Ok(())
         });
-
-        println!("Sleeping like a baby");
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        println!("info: {:?}", tes);
+        std::thread::sleep(std::time::Duration::from_millis(50));
     }
+
+
+    // for i in 0..255 {
+//         // let e = window.next().unwrap();
+
+
+//         // window.draw_2d(&e, |_c, g, _y| {
+//         //     clear([0.5, (i as f32)/100.0, (i as f32)/100.0, 1.0], g);
+//         // });
+
+//         // plotters::prelude::draw_piston_window(&mut window, |b| {
+//         // plotters::drawing::backend_impl::piston::draw_piston_window(&mut window, |b| {
+//         plotters::drawing::draw_piston_window(&mut window, |b| {
+//             let root = b.into_drawing_area();
+//             root.fill(&RGBColor(100, i, i))?;
+
+// println!("Sleeping like a baby {}", i);
+//             Ok(())
+//         });
+
+
+//         std::thread::sleep(std::time::Duration::from_millis(10));
+//     }
 
     // std::thread::sleep(std::time::Duration::from_millis(1000));
 
