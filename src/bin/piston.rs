@@ -14,35 +14,6 @@ extern crate piston_window;
 use rusted_cart_pole::*;
 // use plotters::coord::Shift;
 
-fn plotter_cart_pole<DB: DrawingBackend>(
-    cp: CartPole, root: DrawingArea<DB, plotters::coord::Shift>
-) -> Result<(), plotters::drawing::DrawingAreaErrorKind<DB::ErrorType>> {
-    root.fill(&colors::WHITE)?;
-
-    let y = 400;
-    root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
-
-    // let x = (cp.x+CARTPOLE_MAX_X) * self.window_size.x/(2.0*CARTPOLE_MAX_X);
-    let x = (cp.x+CARTPOLE_MAX_X) * 800.0/(2.0*CARTPOLE_MAX_X);
-    // let y = self.window_size.y - 10.0;
-    let x_width = 100.0;
-
-    // let screen_size = window.screen_size();
-
-    // Cart
-    root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
-    root.draw(&Rectangle::new([((x-x_width/2.0) as i32, y-10), ((x+x_width/2.0) as i32, y+10)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
-
-    // Pole
-    let pole_length = 100.0;
-    let pole_x = pole_length * cp.pole_angle.sin();
-    let pole_y = (pole_length * cp.pole_angle.cos()) as i32;
-    let points = [(x as i32, y as i32), ((x+pole_x) as i32, (y-pole_y) as i32)];
-    root.draw(&PathElement::new(points.to_vec(), Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
-
-    Ok(())
-}
-
 
 fn main() {
     struct Keys { left: bool, right: bool };
@@ -100,9 +71,8 @@ fn main() {
                     scale: arg.window_size[0] / arg.draw_size[0] as f64,
                     context: c, graphics: g,
                 };
-                // plotter_cart_pole(cp, b);
-                plotter_cart_pole(cp, b.into_drawing_area());
-                // root.fill(&RGBColor(100, 100, 100)).expect("Not able to draw");
+
+                cp.draw(b.into_drawing_area()).expect("Problem in plotter_cart_pole drawing.");
 
             });
         }

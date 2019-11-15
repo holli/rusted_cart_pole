@@ -6,30 +6,47 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-# [lib]
-# # name = "rusted_cart_pole"
-# crate-type = ["cdylib"]
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 # not by default
 [profile.release]
 debug = true
-
+lto = true
 
 [dependencies]
-# ferris-says = "0.1"
-quicksilver = "*"
-rand = "*"
-# plotters = "*"
-# plotters = {version = "*", features = ["piston"] }
 # plotters = {version = "*", default_features = false, features = ["piston"] }
+# plotters = {path = "../plotters", version = "*", default_features = false, features = ["piston"] }
+# piston = "*"
+# piston_window = "*"
+wasm-bindgen = "*"
+wee_alloc = "*"
+web-sys = { version = "*", features = ["HtmlCanvasElement"] }
+
+[target.'cfg(not(target_arch="wasm32"))'.dependencies]
 plotters = {path = "../plotters", version = "*", default_features = false, features = ["piston"] }
-# plotters = {path = "../..", default_features = false, features = ["piston"]}
 piston = "*"
-systemstat = "0.1.4"
-piston_window = "0.105.0"
+piston_window = "*"
+rand = "0.7.2"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-stdweb = "*"
+plotters = {path = "../plotters", version = "*", default_features = false }
+rand = {version = "0.7.2", features = ["wasm-bindgen"] }
+wasm-bindgen = "*"
+# js-sys = "*"
+# web-sys = "*"
+web-sys = { version = "*", features = ["console"] }
+# log = "*"
+# console_log = { version = "0.1", optional = true }
+# console_log = { version = "0.1" }
+# console_error_panic_hook = "0.1.6"
+
+
+
+
+# [target.'cfg(target_arch = "wasm32")'.dependencies]
+# stdweb = "*"
+
 
 
 # [dependencies.web-sys]

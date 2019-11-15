@@ -1,10 +1,14 @@
-#[allow(unused_imports)]
 use rand::distributions::{Distribution, Uniform};
+// #[cfg(target_arch="wasm32")]
+use wasm_bindgen::prelude::*;
+use plotters::prelude::*;
+use plotters::style::colors;
 
 pub const CARTPOLE_MAX_X: f32 = 4.8;
 pub const CARTPOLE_UPDATE_TIMESTEP: f32 = 0.02;
 
 // https://github.com/openai/gym/blob/master/gym/envs/classic_control/cartpole.py
+#[wasm_bindgen]
 #[derive(Debug, Default, Clone, Copy)]
 #[repr(C)]
 pub struct CartPole {
@@ -22,6 +26,7 @@ impl std::fmt::Display for CartPole {
     }
 }
 
+#[wasm_bindgen]
 impl CartPole {
     #[allow(dead_code)]
     pub fn still() -> CartPole {
@@ -62,5 +67,61 @@ impl CartPole {
         self.pole_angle += tau * self.pole_velocity;
         self.pole_angle %= 2.0 * std::f32::consts::PI;
         self.pole_velocity += tau * thetaacc;
+    }
+}
+
+impl CartPole {
+    pub fn draw_plotter<DB: DrawingBackend>(
+        &self, root: DrawingArea<DB, plotters::coord::Shift>
+    ) -> Result<(), plotters::drawing::DrawingAreaErrorKind<DB::ErrorType>> {
+        root.fill(&colors::WHITE)?;
+
+        let y = 400;
+        root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+
+        // let x = (cp.x+CARTPOLE_MAX_X) * self.window_size.x/(2.0*CARTPOLE_MAX_X);
+        let x = (self.x+CARTPOLE_MAX_X) * 800.0/(2.0*CARTPOLE_MAX_X);
+        // let y = self.window_size.y - 10.0;
+        let x_width = 100.0;
+
+        // let screen_size = window.screen_size();
+
+        // Cart
+        root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+        root.draw(&Rectangle::new([((x-x_width/2.0) as i32, y-10), ((x+x_width/2.0) as i32, y+10)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+
+        // Pole
+        let pole_length = 100.0;
+        let pole_x = pole_length * self.pole_angle.sin();
+        let pole_y = (pole_length * self.pole_angle.cos()) as i32;
+        let points = [(x as i32, y as i32), ((x+pole_x) as i32, (y-pole_y) as i32)];
+        root.draw(&PathElement::new(points.to_vec(), Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+
+        Ok(())
+    }
+}
+
+#[cfg(not(target_arch="wasm32"))]
+impl CartPole {
+    pub fn draw<DB: DrawingBackend>(
+        &self, root: DrawingArea<DB, plotters::coord::Shift>
+    ) -> Result<(), plotters::drawing::DrawingAreaErrorKind<DB::ErrorType>> {
+        self.draw_plotter(root)
+    }
+}
+
+#[cfg(target_arch="wasm32")]
+use web_sys::HtmlCanvasElement;
+#[cfg(target_arch="wasm32")]
+#[wasm_bindgen]
+impl CartPole {
+    pub fn draw(&self, element: HtmlCanvasElement) -> () {
+        // web_sys::console::log_1(&format!("Basic htmlcanvas in rust drawing").into());
+        let backend = CanvasBackend::with_canvas_object(element).unwrap();
+        let root = backend.into_drawing_area();
+        // web_sys::console::log_1(&format!("Filling blue").into());
+        // root.fill(&colors::RED);
+
+        self.draw_plotter(root).expect("NOt able to draw");
     }
 }
