@@ -1,14 +1,10 @@
 mod cart_pole;
-// pub use cart_pole::CartPole;
 pub use cart_pole::*;
 
-// use plotters::prelude::*;
-// use plotters::style::colors;
-
-// pub extern fn testing_imp() {
-pub fn testing_imp() {
-    println!("AND INSIDE lib.rs/testing()")
-}
+#[cfg(not(target_arch="wasm32"))]
+mod ffi_lib;
+#[cfg(not(target_arch="wasm32"))]
+pub use ffi_lib::*;
 
 
 #[cfg(target_arch="wasm32")]
@@ -37,3 +33,8 @@ pub fn wasm_setup() {
     console_error_panic_hook::set_once();
 }
 
+
+// #[no_mangle]
+// pub extern fn callable_from_c(x: i32) -> i32 {
+//     x * 2 + 1
+// }

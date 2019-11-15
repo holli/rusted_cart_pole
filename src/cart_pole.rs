@@ -120,6 +120,6 @@ impl CartPole {
         let backend = CanvasBackend::with_canvas_object(element).unwrap();
         let root = backend.into_drawing_area();
 
-        self.draw_plotter(root).expect("NOt able to draw");
+        self.draw_plotter(root).expect("Not able to draw_plotter() to canvas.");
     }
 }

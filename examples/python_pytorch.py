@@ -19,7 +19,13 @@ print("Begin")
 #     cart_pole cp_new();
 #     void cp_free(cart_pole);
 #     void cp_step(cart_pole, float force);
+
 # """)
+
+# typedef void* draw_ptr
+# draw_ptr draw_new();
+# void draw_step(draw_ptr, float force);
+
 ffi.cdef("""
     int callable_from_c(int);
 
@@ -34,14 +40,18 @@ ffi.cdef("""
     cart_pole status(cart_pole_ptr);
     void step(cart_pole_ptr, float force);
 
-    typedef void* draw_ptr
-    draw_ptr draw_new();
-    void draw_step(draw_ptr, float force);
+    typedef void* window_ptr;
+    window_ptr window_new();
+    void window_free(window_ptr);
+    void window_draw(window_ptr, cart_pole_ptr);
 
 """)
 
 
 C = ffi.dlopen('/home/ohu/koodi/kesken/rusted_cart_pole/target/debug/librusted_cart_pole.so')
+
+print("In python")
+print(C.callable_from_c(9))
 
 pole = C.new()
 
@@ -51,18 +61,24 @@ res = C.status(pole)
 
 print("Stepping started")
 
-for i in range(20):
-    C.step(pole, 1)
+window = C.window_new()
+
+
+for i in range(100):
+    C.step(pole, 0)
+    C.window_draw(window, pole)
 
 print("Stepped all")
 
-import ipdb; ipdb.set_trace()
-# import pdb; pdb.set_trace()
+C.window_free(window)
+
+# import ipdb; ipdb.set_trace()
+# # import pdb; pdb.set_trace()
 
 
-# C = ffi.dlopen("../ffi/target/debug/librusted_cart_pole.so")
+# # C = ffi.dlopen("../ffi/target/debug/librusted_cart_pole.so")
 
-# print(C.double(9))
+# # print(C.double(9))
 
-C.callable_from_c(9)
+# C.callable_from_c(9)
 
