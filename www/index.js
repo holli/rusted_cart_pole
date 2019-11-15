@@ -36,12 +36,18 @@ function updatePlot() {
   } else if (is_key_down('ArrowRight')) {
     force = 1
   }
-  cart_pole.step(force);
+  let reward = cart_pole.step(force);
+  if (reward < 1){
+    console.log(`Resetting cartpole at ${cart_pole.text()}.`)
+    cart_pole.reset();
+  }
 
   cart_pole.draw(canvas);
   // console.log("CP angle", cart_pole.pole_angle);
   const end = performance.now();
-  status.innerText = `Force ${force}. Rendered in ${Math.ceil(end - start)}ms`;
+  let force_text = (force < 0) ? force : `&nbsp;${force}`;
+  // status.innerText = `Force ${force_text}. Rendered in ${Math.ceil(end - start)}ms. Pole info ${cart_pole.text()}`;
+  status.innerHTML = `Force ${force_text}. Rendered in ${Math.ceil(end - start)}ms. Pole info ${cart_pole.text()}`;
 }
 
 // updatePlot();

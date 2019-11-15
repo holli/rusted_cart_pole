@@ -52,12 +52,18 @@ fn main() {
 
         // Piston tries to keep update_args happening at a constant rate
         if event.update_args().is_some() {
-            if keys.left && !keys.right {
-                cp.step(-1.0);
+            let force = if keys.left && !keys.right {
+                -1.0
             } else if !keys.left && keys.right {
-                cp.step(1.0);
+                1.0
             } else {
-                cp.step(0.0);
+                0.0
+            };
+            let reward = cp.step(force);
+            if reward == 0 {
+                // println!("CartPole ended, step count {}. {}", cp.step_count, cp);
+                println!("CartPole ended, {}", cp);
+                cp.reset();
             }
         }
 

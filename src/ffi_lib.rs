@@ -24,21 +24,26 @@ pub extern fn free(ptr: *mut CartPole) {
 }
 
 #[no_mangle]
-pub extern fn status(ptr: *const CartPole) -> CartPole {
+pub extern fn reset(ptr: *mut CartPole) {
     assert!(!ptr.is_null());
-    let cp = unsafe { &*ptr };
-    // let mut cp = &mut *ptr;
-    // cp.x = 12.0;
-    println!("Inside status {} {}", cp.x, cp.velocity);
-    *cp
+    let cp = unsafe { &mut *ptr };
+    cp.reset();
 }
 
 #[no_mangle]
-pub extern fn step(ptr: *mut CartPole, force: f32) {
+pub extern fn status(ptr: *const CartPole){
     assert!(!ptr.is_null());
-    let cart_pole = unsafe { &mut *ptr };
-    cart_pole.step(force);
-    println!("New status: {}", cart_pole);
+    let cp = unsafe { &*ptr };
+    println!("rusted_cart_pole status(): {}", cp);
+}
+
+#[no_mangle]
+pub extern fn step(ptr: *mut CartPole, force: f32) -> i32 {
+    assert!(!ptr.is_null());
+    let cp = unsafe { &mut *ptr };
+    let reward = cp.step(force);
+    println!("New status: {}", cp);
+    reward
 }
 
 #[no_mangle]

@@ -4,7 +4,8 @@ use wasm_bindgen::prelude::*;
 use plotters::prelude::*;
 use plotters::style::colors;
 
-pub const CARTPOLE_MAX_X: f32 = 4.8;
+pub const CARTPOLE_THRESHOLD_X: f32 = 2.4;
+pub const CARTPOLE_THRESHOLD_POLE: f32 = 45.0 * 2.0 * std::f32::consts::PI / 360.0;
 pub const CARTPOLE_UPDATE_TIMESTEP: f32 = 0.02;
 
 // https://github.com/openai/gym/blob/master/gym/envs/classic_control/cartpole.py
@@ -16,12 +17,13 @@ pub struct CartPole {
     pub velocity: f32,
     pub pole_angle: f32,
     pub pole_velocity: f32, // at the pole tip
+    pub step_count: i32,
 }
 
 impl std::fmt::Display for CartPole {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "box: ({:>+.4}, {:>+.4}), pole: ({:>+.4}, {:>+.4})",
-            self.x, self.velocity, self.pole_angle.to_degrees(), self.pole_velocity
+        write!(f, "step: {:04}, box: ({:>+.4}, {:>+.4}), pole: ({:>+.4}, {:>+.4})",
+            self.step_count, self.x, self.velocity, self.pole_angle.to_degrees(), self.pole_velocity
         )
     }
 }
@@ -35,18 +37,30 @@ impl CartPole {
     }
 
     pub fn new() -> CartPole {
-        // let mut rng = rand::thread_rng();
-        let mut rng = rand::thread_rng();
-        let uni = Uniform::from(-0.05..0.05);
-        CartPole {
-            x: uni.sample(&mut rng),
-            velocity: uni.sample(&mut rng),
-            pole_angle: uni.sample(&mut rng),
-            pole_velocity: uni.sample(&mut rng),
-        }
+        let mut cp = CartPole::still();
+        cp.reset();
+        // CartPole {
+        //     cp.x: uni.sample(&mut rng);
+        //     velocity: uni.sample(&mut rng),
+        //     pole_angle: uni.sample(&mut rng),
+        //     pole_velocity: uni.sample(&mut rng),
+        // }
+        cp
     }
 
-    pub fn step(&mut self, force_input: f32) {
+    pub fn reset(&mut self) {
+        let mut rng = rand::thread_rng();
+        let uni = Uniform::from(-0.05..0.05);
+
+        self.step_count = 0;
+        self.x = uni.sample(&mut rng);
+        self.velocity = uni.sample(&mut rng);
+        self.pole_angle = uni.sample(&mut rng);
+        self.pole_velocity = uni.sample(&mut rng);
+    }
+
+    pub fn step(&mut self, force_input: f32) -> i32 {
+        self.step_count += 1;
         let gravity = 9.8;
         let masscart = 1.0;
         let masspole = 0.5;
@@ -67,6 +81,10 @@ impl CartPole {
         self.pole_angle += tau * self.pole_velocity;
         self.pole_angle %= 2.0 * std::f32::consts::PI;
         self.pole_velocity += tau * thetaacc;
+
+        let done = self.x < -CARTPOLE_THRESHOLD_X || self.x > CARTPOLE_THRESHOLD_X ||
+                   self.pole_angle < -CARTPOLE_THRESHOLD_POLE || self.pole_angle > CARTPOLE_THRESHOLD_POLE;
+        if done { 0 } else { 1 }
     }
 }
 
@@ -79,12 +97,9 @@ impl CartPole {
         let y = 400;
         root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
 
-        // let x = (cp.x+CARTPOLE_MAX_X) * self.window_size.x/(2.0*CARTPOLE_MAX_X);
-        let x = (self.x+CARTPOLE_MAX_X) * 800.0/(2.0*CARTPOLE_MAX_X);
-        // let y = self.window_size.y - 10.0;
+        let world_with = CARTPOLE_THRESHOLD_X + 0.5;
+        let x = (self.x + world_with) * 800.0 / (2.0 * world_with);
         let x_width = 100.0;
-
-        // let screen_size = window.screen_size();
 
         // Cart
         root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
@@ -121,5 +136,9 @@ impl CartPole {
         let root = backend.into_drawing_area();
 
         self.draw_plotter(root).expect("Not able to draw_plotter() to canvas.");
+    }
+
+    pub fn text(&self) -> String {
+        format!("{}", self)
     }
 }
