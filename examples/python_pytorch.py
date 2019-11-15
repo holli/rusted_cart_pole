@@ -9,26 +9,8 @@ ffi = FFI()
 
 print("Begin")
 # ffi.cdef("int callable_from_c(int);")
-# ffi.cdef("""
-#     int callable_from_c(int);
-
-#     typedef struct {
-#         float x, velocity, pole_angle, pole_velocity;
-#     } cart_pole;
-
-#     cart_pole cp_new();
-#     void cp_free(cart_pole);
-#     void cp_step(cart_pole, float force);
-
-# """)
-
-# typedef void* draw_ptr
-# draw_ptr draw_new();
-# void draw_step(draw_ptr, float force);
 
 ffi.cdef("""
-    int callable_from_c(int);
-
     typedef struct cart_pole {
         float x, velocity, pole_angle, pole_velocity;
     } cart_pole;
@@ -51,7 +33,7 @@ ffi.cdef("""
 C = ffi.dlopen('/home/ohu/koodi/kesken/rusted_cart_pole/target/debug/librusted_cart_pole.so')
 
 print("In python")
-print(C.callable_from_c(9))
+# print(C.callable_from_c(9))
 
 pole = C.new()
 
@@ -62,7 +44,6 @@ res = C.status(pole)
 print("Stepping started")
 
 window = C.window_new()
-
 
 for i in range(100):
     C.step(pole, 0)

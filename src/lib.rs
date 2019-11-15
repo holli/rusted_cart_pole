@@ -10,20 +10,18 @@ pub use ffi_lib::*;
 #[cfg(target_arch="wasm32")]
 use wasm_bindgen::prelude::*;
 
-#[cfg(target_arch="wasm32")]
-#[wasm_bindgen]
-extern {
-    fn alert(s: &str);
-}
+// #[cfg(target_arch="wasm32")]
+// #[wasm_bindgen]
+// extern {
+//     fn alert(s: &str);
+// }
 
-// use log::Level;
-
-#[cfg(target_arch="wasm32")]
-#[wasm_bindgen]
-pub fn greet() {
-    // alert("Hello, from rust!");
-    web_sys::console::log_1(&format!("Hello log from rust").into());
-}
+// #[cfg(target_arch="wasm32")]
+// #[wasm_bindgen]
+// pub fn greet() {
+//     // alert("Hello, from rust!");
+//     web_sys::console::log_1(&format!("Hello log from rust").into());
+// }
 
 #[cfg(target_arch="wasm32")]
 #[wasm_bindgen]
@@ -33,8 +31,3 @@ pub fn wasm_setup() {
     console_error_panic_hook::set_once();
 }
 
-
-// #[no_mangle]
-// pub extern fn callable_from_c(x: i32) -> i32 {
-//     x * 2 + 1
-// }
