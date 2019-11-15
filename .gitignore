@@ -11,3 +11,8 @@
 
 ##################
 .vscode
+
+www/.bin
+www/pkg
+www/node_modules
+

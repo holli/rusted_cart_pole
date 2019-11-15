@@ -119,8 +119,6 @@ impl CartPole {
         // web_sys::console::log_1(&format!("Basic htmlcanvas in rust drawing").into());
         let backend = CanvasBackend::with_canvas_object(element).unwrap();
         let root = backend.into_drawing_area();
-        // web_sys::console::log_1(&format!("Filling blue").into());
-        // root.fill(&colors::RED);
 
         self.draw_plotter(root).expect("NOt able to draw");
     }

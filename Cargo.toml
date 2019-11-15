@@ -36,6 +36,7 @@ wasm-bindgen = "*"
 # js-sys = "*"
 # web-sys = "*"
 web-sys = { version = "*", features = ["console"] }
+console_error_panic_hook = { version = "0.1.1" } # increases size, maybe avoid in production
 # log = "*"
 # console_log = { version = "0.1", optional = true }
 # console_log = { version = "0.1" }
