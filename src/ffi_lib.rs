@@ -16,7 +16,6 @@ pub extern fn new() -> *mut CartPole {
 
 #[no_mangle]
 pub extern fn free(ptr: *mut CartPole) {
-    println!("Freeing cartpole from Rust");
     if ptr.is_null() { return; }
     unsafe {
         Box::from_raw(ptr);
@@ -42,13 +41,12 @@ pub extern fn step(ptr: *mut CartPole, force: f32) -> i32 {
     assert!(!ptr.is_null());
     let cp = unsafe { &mut *ptr };
     let reward = cp.step(force);
-    println!("New status: {}", cp);
     reward
 }
 
 #[no_mangle]
 pub extern fn window_new() -> *mut PistonWindow {
-    let window: PistonWindow = WindowSettings::new("Hello Piston!", (800, 600))
+    let window: PistonWindow = WindowSettings::new("RustedCartPole", (800, 600))
         .exit_on_esc(true)
         // .controllers(false) // should they listen controller input
         .samples(1)
@@ -59,7 +57,6 @@ pub extern fn window_new() -> *mut PistonWindow {
 
 #[no_mangle]
 pub extern fn window_free(window: *mut PistonWindow) {
-    println!("Freeing window from Rust");
     if window.is_null() { return; }
     unsafe {
         Box::from_raw(window);
