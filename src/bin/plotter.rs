@@ -7,14 +7,13 @@ extern crate piston_window;
 
 // use piston_window::*;
 
-
 fn main() {
     let mut window: PistonWindow = WindowSettings::new("Hello Piston!", (640, 480))
         // .exit_on_esc(true)
         // .controllers(false)
         .samples(1)
         .build()
-        .unwrap_or_else(|e| { panic!("Failed to build PistonWindow: {}", e) });
+        .unwrap_or_else(|e| panic!("Failed to build PistonWindow: {}", e));
 
     // let e = window.next();
     // let e = window.next().unwrap();
@@ -34,28 +33,25 @@ fn main() {
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
 
-
     // for i in 0..255 {
-//         // let e = window.next().unwrap();
+    //         // let e = window.next().unwrap();
 
+    //         // window.draw_2d(&e, |_c, g, _y| {
+    //         //     clear([0.5, (i as f32)/100.0, (i as f32)/100.0, 1.0], g);
+    //         // });
 
-//         // window.draw_2d(&e, |_c, g, _y| {
-//         //     clear([0.5, (i as f32)/100.0, (i as f32)/100.0, 1.0], g);
-//         // });
+    //         // plotters::prelude::draw_piston_window(&mut window, |b| {
+    //         // plotters::drawing::backend_impl::piston::draw_piston_window(&mut window, |b| {
+    //         plotters::drawing::draw_piston_window(&mut window, |b| {
+    //             let root = b.into_drawing_area();
+    //             root.fill(&RGBColor(100, i, i))?;
 
-//         // plotters::prelude::draw_piston_window(&mut window, |b| {
-//         // plotters::drawing::backend_impl::piston::draw_piston_window(&mut window, |b| {
-//         plotters::drawing::draw_piston_window(&mut window, |b| {
-//             let root = b.into_drawing_area();
-//             root.fill(&RGBColor(100, i, i))?;
+    // println!("Sleeping like a baby {}", i);
+    //             Ok(())
+    //         });
 
-// println!("Sleeping like a baby {}", i);
-//             Ok(())
-//         });
-
-
-//         std::thread::sleep(std::time::Duration::from_millis(10));
-//     }
+    //         std::thread::sleep(std::time::Duration::from_millis(10));
+    //     }
 
     // std::thread::sleep(std::time::Duration::from_millis(1000));
 

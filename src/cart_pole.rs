@@ -1,8 +1,8 @@
 use rand::distributions::{Distribution, Uniform};
 // #[cfg(target_arch="wasm32")]
-use wasm_bindgen::prelude::*;
 use plotters::prelude::*;
 use plotters::style::colors;
+use wasm_bindgen::prelude::*;
 
 pub const CARTPOLE_THRESHOLD_X: f32 = 2.4;
 pub const CARTPOLE_THRESHOLD_POLE: f32 = 45.0 * 2.0 * std::f32::consts::PI / 360.0;
@@ -22,8 +22,14 @@ pub struct CartPole {
 
 impl std::fmt::Display for CartPole {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "step: {:04}, box: ({:>+.4}, {:>+.4}), pole: ({:>+.4}, {:>+.4})",
-            self.step_count, self.x, self.velocity, self.pole_angle.to_degrees(), self.pole_velocity
+        write!(
+            f,
+            "step: {:04}, box: ({:>+.4}, {:>+.4}), pole: ({:>+.4}, {:>+.4})",
+            self.step_count,
+            self.x,
+            self.velocity,
+            self.pole_angle.to_degrees(),
+            self.pole_velocity
         )
     }
 }
@@ -82,52 +88,78 @@ impl CartPole {
         self.pole_angle %= 2.0 * std::f32::consts::PI;
         self.pole_velocity += tau * thetaacc;
 
-        let done = self.x < -CARTPOLE_THRESHOLD_X || self.x > CARTPOLE_THRESHOLD_X ||
-                   self.pole_angle < -CARTPOLE_THRESHOLD_POLE || self.pole_angle > CARTPOLE_THRESHOLD_POLE;
-        if done { 0 } else { 1 }
+        let done = self.x < -CARTPOLE_THRESHOLD_X
+            || self.x > CARTPOLE_THRESHOLD_X
+            || self.pole_angle < -CARTPOLE_THRESHOLD_POLE
+            || self.pole_angle > CARTPOLE_THRESHOLD_POLE;
+        if done {
+            0
+        } else {
+            1
+        }
     }
 }
 
 impl CartPole {
     pub fn draw_plotter<DB: DrawingBackend>(
-        &self, root: DrawingArea<DB, plotters::coord::Shift>
+        &self,
+        root: DrawingArea<DB, plotters::coord::Shift>,
     ) -> Result<(), plotters::drawing::DrawingAreaErrorKind<DB::ErrorType>> {
         root.fill(&colors::WHITE)?;
 
         let y = 400;
-        root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+        root.draw(&Rectangle::new(
+            [(0, y), (800, y + 1)],
+            Into::<ShapeStyle>::into(&colors::BLACK).filled(),
+        ))?;
 
         let world_with = CARTPOLE_THRESHOLD_X + 0.5;
         let x = (self.x + world_with) * 800.0 / (2.0 * world_with);
         let x_width = 100.0;
 
         // Cart
-        root.draw(&Rectangle::new([(0, y), (800, y+1)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
-        root.draw(&Rectangle::new([((x-x_width/2.0) as i32, y-10), ((x+x_width/2.0) as i32, y+10)], Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+        root.draw(&Rectangle::new(
+            [(0, y), (800, y + 1)],
+            Into::<ShapeStyle>::into(&colors::BLACK).filled(),
+        ))?;
+        root.draw(&Rectangle::new(
+            [
+                ((x - x_width / 2.0) as i32, y - 10),
+                ((x + x_width / 2.0) as i32, y + 10),
+            ],
+            Into::<ShapeStyle>::into(&colors::BLACK).filled(),
+        ))?;
 
         // Pole
         let pole_length = 100.0;
         let pole_x = pole_length * self.pole_angle.sin();
         let pole_y = (pole_length * self.pole_angle.cos()) as i32;
-        let points = [(x as i32, y as i32), ((x+pole_x) as i32, (y-pole_y) as i32)];
-        root.draw(&PathElement::new(points.to_vec(), Into::<ShapeStyle>::into(&colors::BLACK).filled()))?;
+        let points = [
+            (x as i32, y as i32),
+            ((x + pole_x) as i32, (y - pole_y) as i32),
+        ];
+        root.draw(&PathElement::new(
+            points.to_vec(),
+            Into::<ShapeStyle>::into(&colors::BLACK).filled(),
+        ))?;
 
         Ok(())
     }
 }
 
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 impl CartPole {
     pub fn draw<DB: DrawingBackend>(
-        &self, root: DrawingArea<DB, plotters::coord::Shift>
+        &self,
+        root: DrawingArea<DB, plotters::coord::Shift>,
     ) -> Result<(), plotters::drawing::DrawingAreaErrorKind<DB::ErrorType>> {
         self.draw_plotter(root)
     }
 }
 
-#[cfg(target_arch="wasm32")]
+#[cfg(target_arch = "wasm32")]
 use web_sys::HtmlCanvasElement;
-#[cfg(target_arch="wasm32")]
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 impl CartPole {
     pub fn draw(&self, element: HtmlCanvasElement) -> () {
@@ -135,7 +167,8 @@ impl CartPole {
         let backend = CanvasBackend::with_canvas_object(element).unwrap();
         let root = backend.into_drawing_area();
 
-        self.draw_plotter(root).expect("Not able to draw_plotter() to canvas.");
+        self.draw_plotter(root)
+            .expect("Not able to draw_plotter() to canvas.");
     }
 
     pub fn text(&self) -> String {

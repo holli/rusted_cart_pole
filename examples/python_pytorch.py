@@ -34,11 +34,11 @@ C = ffi.dlopen(
 
 def get_model(obs=4, acts=3):
     model = nn.Sequential(
-        nn.Linear(obs, 16),
+        nn.Linear(obs, 8),
         torch.nn.ReLU(),
-        nn.Linear(16, 32),
+        nn.Linear(8, 16),
         torch.nn.ReLU(),
-        nn.Linear(32, acts)
+        nn.Linear(16, acts)
     )
     return model
 
@@ -52,6 +52,7 @@ class KeyboardCtrlC:
     def key_pressed_m(self, signum, frame):
         self.key_pressed = True
 
+keyboard_input = KeyboardCtrlC()
 
 def pole_observation(pole):
     return np.array([pole.x, pole.velocity, pole.pole_angle, pole.pole_velocity])
@@ -62,7 +63,6 @@ model = get_model().double()  # .cuda()
 
 
 def train(max_episodes, print_log_episodes=20):
-    keyboard_input = KeyboardCtrlC()
     transitions = collections.deque(maxlen=10000)
     episodes = collections.deque(maxlen=100)
     start_time = time.time()
@@ -142,7 +142,7 @@ def run_model(window):
     C.reset(pole)
     reward = 1
 
-    while reward != 0:
+    while reward != 0 and pole.step_count < 1000:
         C.window_draw(window, pole)
         observation = pole_observation(pole)
         x = Variable(torch.from_numpy(np.expand_dims(observation, 0)))  # .cuda()
@@ -152,13 +152,17 @@ def run_model(window):
         reward = C.step(pole, action-1)
         time.sleep(0.02)
 
+        if keyboard_input.key_pressed:
+            print("Started python console. Quit with 'ctrl-d' or continue with 'c'")
+            import ipdb; ipdb.set_trace()
+
     print('CartPole episode finished, total steps: {}'.format(pole.step_count))
     C.window_draw(window, pole)
 
 
 if __name__ == "__main__":
     results = []
-    result = train(5000)
+    result = train(2000)
     print("Training done")
 
     window = C.window_new()

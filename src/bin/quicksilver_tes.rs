@@ -1,19 +1,18 @@
 #[allow(unused_imports)]
 use quicksilver::{
-    Future, Result,
     combinators::result,
-
-    geom::{Circle, Line, Rectangle, Transform, Triangle, Vector, Shape},
-    graphics::{Background::Col, Color},
-    lifecycle,
+    geom::{Circle, Line, Rectangle, Shape, Transform, Triangle, Vector},
     graphics,
-    lifecycle::{run, Settings, State, Window, Asset},
+    graphics::{Background::Col, Color},
     input::Key,
+    lifecycle,
+    lifecycle::{run, Asset, Settings, State, Window},
+    Future, Result,
 };
 #[allow(unused_imports)]
 use std::panic;
 
-const WINDOW_SIZE: Vector = Vector{x: 800.0, y: 600.0};
+const WINDOW_SIZE: Vector = Vector { x: 800.0, y: 600.0 };
 
 // https://github.com/openai/gym/blob/master/gym/envs/classic_control/cartpole.py
 struct Draw {
@@ -25,7 +24,7 @@ struct Draw {
 impl State for Draw {
     fn new() -> Result<Draw> {
         let s = Draw {
-            window_size: Vector::new(WINDOW_SIZE.x, WINDOW_SIZE.y-300.0),
+            window_size: Vector::new(WINDOW_SIZE.x, WINDOW_SIZE.y - 300.0),
             color: quicksilver::graphics::Color::YELLOW,
             // font_asset: graphics::Font::from_slice(std::include_bytes!("../static/font.ttf")).unwrap(),
         };
@@ -57,9 +56,15 @@ impl State for Draw {
         let screen_size = window.screen_size();
 
         // Black track across screen
-        window.draw(&Line::new((0, y), (screen_size.x, y)).with_thickness(2.0), Col(Color::BLACK));
+        window.draw(
+            &Line::new((0, y), (screen_size.x, y)).with_thickness(2.0),
+            Col(Color::BLACK),
+        );
         // Cart
-        window.draw(&Line::new((50, 50), (50, 100)).with_thickness(50.0), Col(self.color));
+        window.draw(
+            &Line::new((50, 50), (50, 100)).with_thickness(50.0),
+            Col(self.color),
+        );
 
         // // Pole
         // let pole_length = 60.0;
@@ -80,14 +85,14 @@ fn main_run_draw() {
     lifecycle::run::<Draw>("Draw Geometry", WINDOW_SIZE, settings)
 }
 
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 fn main() {
     main_run_draw()
 }
 
-#[cfg(target_arch="wasm32")]
+#[cfg(target_arch = "wasm32")]
 use stdweb::js;
-#[cfg(target_arch="wasm32")]
+#[cfg(target_arch = "wasm32")]
 fn main() {
     js! {
         console.log("CartPole: Loading with default window size:", @{WINDOW_SIZE.x}, @{WINDOW_SIZE.y})
@@ -104,4 +109,3 @@ fn main() {
 
     main_run_draw()
 }
-
