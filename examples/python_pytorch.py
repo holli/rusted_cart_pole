@@ -52,12 +52,12 @@ class KeyboardCtrlC:
     def key_pressed_m(self, signum, frame):
         self.key_pressed = True
 
-keyboard_input = KeyboardCtrlC()
 
 def pole_observation(pole):
     return np.array([pole.x, pole.velocity, pole.pole_angle, pole.pole_velocity])
 
 
+keyboard_input = KeyboardCtrlC()
 pole = C.new()
 model = get_model().double()  # .cuda()
 
@@ -92,21 +92,24 @@ def train(max_episodes, print_log_episodes=20):
             reward = C.step(pole, action-1)  # Actions are 0,1,2. Translate it to force -1, 0, 1
             observation = pole_observation(pole)
 
-            ep_trans.append([old_observation, action, reward, observation])
-
-            if reward == 0 or pole.step_count > 1000:
+            if reward == 0 or pole.step_count > 400:
                 break
+
+            ep_trans.append([old_observation, action, reward, observation])
 
             if keyboard_input.key_pressed:
                 print("Started python console. Quit with 'ctrl-d' or continue with 'c'")
                 import ipdb; ipdb.set_trace()
 
-        iterations = len(ep_trans)
-        for idx in range(iterations):
-            if iterations < 199:  # failed at the game, reward start from 1 and gradually go down to -1 for last action
-                ep_trans[idx][2] = (200 - 200/iterations*idx)/200 - 1.0
-            else:
-                ep_trans[idx][2] = 1  # success, reward 1 for everything
+        # by default all rewards are 1, but discounted if we failed at the game
+        # rewards range [-50..0] are discounted starting from 1 to -1 for the last action
+        total_steps = len(ep_trans)
+        if total_steps < 199:  # failed at the game
+            discounted_steps = 50
+            discounted_rewards = [(0.5 - x/discounted_steps)*2 for x in range(0, discounted_steps+1)]
+
+            for idx in range(total_steps, max(0, total_steps-discounted_steps), -1):
+                ep_trans[idx-1][2] = discounted_rewards.pop()
 
         transitions.extend(ep_trans)
         episodes.append(len(ep_trans))
@@ -162,7 +165,7 @@ def run_model(window):
 
 if __name__ == "__main__":
     results = []
-    result = train(2000)
+    result = train(3000)
     print("Training done")
 
     window = C.window_new()
@@ -174,8 +177,5 @@ if __name__ == "__main__":
     # import ipdb; ipdb.set_trace()
 
     C.window_free(window)
-
-
-
 
 
