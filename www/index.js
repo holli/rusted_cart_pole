@@ -67,7 +67,6 @@ class PolicyNetwork {
 
     model.add(tf.layers.dense({units: 16, inputShape: [4]}));
     model.add(tf.layers.dense({units: 32}));
-    // model.add(tf.layers.dense({units: 3}));
     model.add(tf.layers.dense({units: 3, activation: 'softmax'}));
 
     console.log("New Model: " + JSON.stringify(model.outputs[0].shape));
@@ -112,80 +111,102 @@ class PolicyNetwork {
                         `Rendered in ${Math.ceil((end - this.prf_start)/cart_pole.step_count)}ms/step. Pole info ${cart_pole.text()}`;
   }
 
-  async train(pole_cart, num_games, max_steps_per_game) {
-    const allGradients = [];
-    const allRewards = [];
-    const gameSteps = [];
-    // onGameEnd(0, numGames);
-    for (let i = 0; i < num_games; ++i) {
+  async train(pole_cart, max_episodes) {
+    const transitions = []
+    const episodes = []
+
+    for (let episode = 0; episode < max_episodes; episode++) {
       pole_cart.reset()
+      const ep_trans = []
+      let observation = this.cartPoleInputs(cart_pole)
+      let epsilon = Math.max(0.02, 0.7 * Math.pow(0.99, episode))
+      let isDone = false;
+      while (!isDone){
+        let old_observation = observation
+        let action = null
 
-      const rewards = [];
-      const gameGradients = [];
-      for (let j = 0; j < max_steps_per_game; ++j) {
-        // For every step of the game, remember gradients of the policy
-        // network's weights with respect to the probability of the action
-        // choice that lead to the reward.
-        const gradients = tf.tidy(() => {
-          const inputTensor = cartPoleSystem.getStateTensor();
-          return this.getGradientsAndSaveActions(inputTensor).grads;
-        });
-
-        this.pushGradients(gameGradients, gradients);
-        const action = this.currentActions_[0];
-        const isDone = cartPoleSystem.update(action);
-
-        // await maybeRenderDuringTraining(cartPoleSystem);
-
-        if (isDone) {
-          // When the game ends before max step count is reached, a reward of
-          // 0 is given.
-          rewards.push(0);
-          break;
+        if (Math.random() < epsilon) {
+          action = Math.floor(Math.random()*3)
         } else {
-          // As long as the game doesn't end, each step leads to a reward of 1.
-          // These reward values will later be "discounted", leading to
-          // higher reward values for longer-lasting games.
-          rewards.push(1);
+          action = tf.tidy(() => {
+            const logits = this.model.predict(observation);
+            const action = logits.argMax(1)
+            return action.arraySync()[0]
+          })
+        }
+
+        let reward = cart_pole.step(action - 1)
+        observation = this.cartPoleInputs(cart_pole)
+        ep_trans.push([old_observation, action, reward, observation])
+
+        if (reward == 0 || cart_pole.step_count > 400) {
+          isDone = true
+        }
+
+        if (this.abort_signal) {
+          return false
         }
       }
-      onGameEnd(i + 1, num_games);
-      gameSteps.push(rewards.length);
-      this.pushGradients(allGradients, gameGradients);
-      allRewards.push(rewards);
-      await tf.nextFrame();
+
+      // by default all rewards are 1, but discounted if we failed at the game
+      // rewards range [-100..0] are discounted starting from 1 to -1 for the last action
+      let discounted_steps = 100
+      let total_steps = ep_trans.length
+      if (ep_trans[ep_trans.length-1][2] == 0){
+        let discounted_reward = (x) => -(0.5 - x/discounted_steps)*2
+
+        for (let idx = total_steps; idx > Math.max(0, total_steps-discounted_steps); idx--) {
+          ep_trans[idx-1][2] = discounted_reward(total_steps-idx)
+        }
+      }
+      // console.log(ep_trans.map(x => x[2]))
+      transitions.push(...ep_trans)
+      if (transitions.length > 10000){
+        transitions = transitions.slice(transitions.length - 10000, )
+      }
+
+      console.log("Ended episode ", episode, ". Steps: ", cart_pole.step_count,
+                  ". Transitions.len: ", transitions.length)
+
+
+      let minibatch_size = 32
+      if (transitions.length >= minibatch_size){
+        console.log("MINIBATCH STARTING")
+        let batch_x = []
+        let batch_y_rewards = []
+        let batch_y_actions = []
+        for (let i = 0; i < minibatch_size; i++){
+          let arr = transitions[Math.floor(Math.random() * transitions.length)]
+          // window.test_a= arr[0]
+          batch_x.push(arr[0].dataSync())
+          batch_y_actions.push(arr[1])
+          batch_y_rewards.push(arr[2])
+        }
+
+        console.log("Predict size: ")
+
+        window.test_res = batch_x
+        batch_x = tf.tensor(batch_x)
+        let batch_y = this.model.predict(batch_x)
+        window.test_b = batch_y
+        batch_y = batch_y.arraySync()
+
+        for (let i = 0; i < minibatch_size; i++){
+          batch_y[i][batch_y_actions[i]] = batch_y_rewards[i]
+        }
+
+        // this.model.trainOnBatch()
+        this.model.fit(batch_x, tf.tensor(batch_y))
+      }
+
     }
-
-    tf.tidy(() => {
-      // The following line does three things:
-      // 1. Performs reward discounting, i.e., make recent rewards count more
-      //    than rewards from the further past. The effect is that the reward
-      //    values from a game with many steps become larger than the values
-      //    from a game with fewer steps.
-      // 2. Normalize the rewards, i.e., subtract the global mean value of the
-      //    rewards and divide the result by the global standard deviation of
-      //    the rewards. Together with step 1, this makes the rewards from
-      //    long-lasting games positive and rewards from short-lasting
-      //    negative.
-      // 3. Scale the gradients with the normalized reward values.
-      const normalizedRewards =
-        discountAndNormalizeRewards(allRewards, discountRate);
-      // Add the scaled gradients to the weights of the policy network. This
-      // step makes the policy network more likely to make choices that lead
-      // to long-lasting games in the future (i.e., the crux of this RL
-      // algorithm.)
-      optimizer.applyGradients(
-        scaleAndAverageGradients(allGradients, normalizedRewards));
-    });
-    tf.dispose(allGradients);
-    return gameSteps;
   }
-
 }
 
 window.PolicyNetwork = PolicyNetwork
-window.tes = new PolicyNetwork()
-window.tes.eval_episode(cart_pole);
+window.pn = new PolicyNetwork()
+// window.pn.eval_episode(cart_pole);
+window.pn.train(cart_pole, 2);
 
 
 

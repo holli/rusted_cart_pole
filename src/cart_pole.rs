@@ -56,12 +56,14 @@ impl CartPole {
 
     pub fn reset(&mut self) {
         let mut rng = rand::thread_rng();
-        let uni = Uniform::from(-0.05..0.05);
+        // let uni = Uniform::from(-0.05..0.05);
+        let uni_small = Uniform::from(-0.10..0.10);
+        let uni = Uniform::from(-0.30..0.30);
 
         self.step_count = 0;
-        self.x = uni.sample(&mut rng);
+        self.x = uni_small.sample(&mut rng);
         self.velocity = uni.sample(&mut rng);
-        self.pole_angle = uni.sample(&mut rng);
+        self.pole_angle = uni_small.sample(&mut rng);
         self.pole_velocity = uni.sample(&mut rng);
     }
 

@@ -75,6 +75,7 @@ def train(max_episodes, print_log_episodes=20):
         observation = pole_observation(pole)
         ep_trans = collections.deque(maxlen=200)
 
+
         while True:
             old_observation = observation
 
@@ -91,21 +92,20 @@ def train(max_episodes, print_log_episodes=20):
 
             reward = C.step(pole, action-1)  # Actions are 0,1,2. Translate it to force -1, 0, 1
             observation = pole_observation(pole)
+            ep_trans.append([old_observation, action, reward, observation])
 
             if reward == 0 or pole.step_count > 400:
                 break
-
-            ep_trans.append([old_observation, action, reward, observation])
 
             if keyboard_input.key_pressed:
                 print("Started python console. Quit with 'ctrl-d' or continue with 'c'")
                 import ipdb; ipdb.set_trace()
 
         # by default all rewards are 1, but discounted if we failed at the game
-        # rewards range [-50..0] are discounted starting from 1 to -1 for the last action
+        # rewards range [-100..0] are discounted starting from 1 to -1 for the last action
+        discounted_steps = 100
         total_steps = len(ep_trans)
-        if total_steps < 199:  # failed at the game
-            discounted_steps = 50
+        if ep_trans[-1][2] == 0:  # failed at the game, last reward == 0
             discounted_rewards = [(0.5 - x/discounted_steps)*2 for x in range(0, discounted_steps+1)]
 
             for idx in range(total_steps, max(0, total_steps-discounted_steps), -1):
