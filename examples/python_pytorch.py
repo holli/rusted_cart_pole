@@ -36,9 +36,9 @@ def get_model(obs=4, acts=3):
     model = nn.Sequential(
         nn.Linear(obs, 8),
         torch.nn.ReLU(),
-        nn.Linear(8, 16),
+        nn.Linear(8, 8),
         torch.nn.ReLU(),
-        nn.Linear(16, acts)
+        nn.Linear(8, acts)
     )
     return model
 
@@ -63,7 +63,7 @@ model = get_model().double()  # .cuda()
 
 
 def train(max_episodes, print_log_episodes=20):
-    transitions = collections.deque(maxlen=10000)
+    transitions = collections.deque(maxlen=3000)
     episodes = collections.deque(maxlen=100)
     start_time = time.time()
 

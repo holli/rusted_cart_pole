@@ -59,31 +59,39 @@ window.updatePlot = updatePlot;
 
 class PolicyNetwork {
   constructor() {
-    this.model = this.getModel();
+    this.model = this.getModel()
+    this.train_count = 0
+    this.debug = []
   }
+
 
   getModel() {
     const model = tf.sequential();
 
-    model.add(tf.layers.dense({units: 16, inputShape: [4]}));
-    model.add(tf.layers.dense({units: 32}));
-    model.add(tf.layers.dense({units: 3, activation: 'softmax'}));
+    model.add(tf.layers.dense({units: 8, inputShape: [4], activation: 'relu',}))
+    model.add(tf.layers.dense({units: 8, activation: 'relu',}));
+    // model.add(tf.layers.dense({units: 3, activation: 'softmax'}));
+    model.add(tf.layers.dense({units: 3}));
 
     console.log("New Model: " + JSON.stringify(model.outputs[0].shape));
 
-    const optimizer = tf.train.adam();
+    const optimizer = tf.train.adam()
+    this.optimizer = optimizer
     model.compile({
       optimizer: optimizer,
-      loss: 'categoricalCrossentropy',
-      metrics: ['accuracy'],
+      // loss: 'categoricalCrossentropy',
+      loss: 'meanSquaredError',
+      // metrics: ['accuracy'],
     });
 
     return model;
   }
 
+
   cartPoleInputs(cp) {
-    return tf.tensor2d([[cp.x, cp.velocity, cp.pole_angle, cp.pole_velocity]])
+    return [cp.x, cp.velocity, cp.pole_angle, cp.pole_velocity]
   }
+
 
   async eval_episode(cart_pole) {
     cart_pole.reset()
@@ -92,7 +100,7 @@ class PolicyNetwork {
     let isDone = false;
     while (!isDone){
       tf.tidy(() => {
-        const logits = this.model.predict(this.cartPoleInputs(cart_pole));
+        const logits = this.model.predict(tf.tensor2d([this.cartPoleInputs(cart_pole)]));
         const action = logits.argMax(1)
         const force = action.arraySync()[0] - 1
         // console.log("Force: ", force);
@@ -111,11 +119,13 @@ class PolicyNetwork {
                         `Rendered in ${Math.ceil((end - this.prf_start)/cart_pole.step_count)}ms/step. Pole info ${cart_pole.text()}`;
   }
 
+
   async train(pole_cart, max_episodes) {
-    const transitions = []
-    const episodes = []
+    let transitions = []
+    let episodes = []
 
     for (let episode = 0; episode < max_episodes; episode++) {
+      this.train_count += 1
       pole_cart.reset()
       const ep_trans = []
       let observation = this.cartPoleInputs(cart_pole)
@@ -129,7 +139,7 @@ class PolicyNetwork {
           action = Math.floor(Math.random()*3)
         } else {
           action = tf.tidy(() => {
-            const logits = this.model.predict(observation);
+            const logits = this.model.predict(tf.tensor2d([observation]));
             const action = logits.argMax(1)
             return action.arraySync()[0]
           })
@@ -161,29 +171,28 @@ class PolicyNetwork {
       }
       // console.log(ep_trans.map(x => x[2]))
       transitions.push(...ep_trans)
-      if (transitions.length > 10000){
-        transitions = transitions.slice(transitions.length - 10000, )
+      let transitions_size = 3000
+      if (transitions.length > transitions_size){
+        transitions = transitions.slice(transitions.length - transitions_size, )
       }
 
-      console.log("Ended episode ", episode, ". Steps: ", cart_pole.step_count,
-                  ". Transitions.len: ", transitions.length)
-
+      episodes.push(cart_pole.step_count)
+      if (episode % 100 == 0 || episode == max_episodes-1){
+        await this.eval_episode(cart_pole);
+      }
 
       let minibatch_size = 32
+      let loss_info = ""
       if (transitions.length >= minibatch_size){
-        console.log("MINIBATCH STARTING")
         let batch_x = []
         let batch_y_rewards = []
         let batch_y_actions = []
         for (let i = 0; i < minibatch_size; i++){
           let arr = transitions[Math.floor(Math.random() * transitions.length)]
-          // window.test_a= arr[0]
-          batch_x.push(arr[0].dataSync())
+          batch_x.push(arr[0])
           batch_y_actions.push(arr[1])
           batch_y_rewards.push(arr[2])
         }
-
-        console.log("Predict size: ")
 
         window.test_res = batch_x
         batch_x = tf.tensor(batch_x)
@@ -195,47 +204,29 @@ class PolicyNetwork {
           batch_y[i][batch_y_actions[i]] = batch_y_rewards[i]
         }
 
-        // this.model.trainOnBatch()
-        this.model.fit(batch_x, tf.tensor(batch_y))
+        // This is probably so wrong way to do it. There is probably much
+        // more elegant way of modifying the tensors directly and not copying
+        // so much but I didn't use time to check tensorflow.js manuals
+        let loss = await this.model.fit(batch_x, tf.tensor(batch_y))
+        loss_info = loss.history['loss'][0]
+      }
+
+      if (episode % 20 == 0 || episode == max_episodes-1){
+        let episodes_mean = episodes.reduce((a,b) => a + b, 0) / episodes.length
+        episodes = []
+        console.log("Ended episode ", episode,
+                    ". Avg steps: ", episodes_mean, ". Epsilon: ", epsilon, ". Loss:", loss_info,
+                    ". Transitions.len: ", transitions.length)
       }
 
     }
   }
 }
 
+
 window.PolicyNetwork = PolicyNetwork
 window.pn = new PolicyNetwork()
 // window.pn.eval_episode(cart_pole);
-window.pn.train(cart_pole, 2);
-
-
-
-// if needing timeout version
-  // eval_episode(cart_pole) {
-  //   cart_pole.reset()
-  //   this.prf_start = performance.now();
-  //   this.eval_episode_demo(cart_pole);
-
-  //   status.innerHTML = `Running demo episode...`;
-  // }
-
-  // eval_episode_demo(cart_pole) {
-  //   tf.tidy(() => {
-  //     const logits = this.model.predict(this.cartPoleInputs(cart_pole));
-  //     const action = logits.argMax(1)
-  //     const force = action.arraySync()[0] - 1
-  //     // console.log("Force: ", force);
-  //     const reward = cart_pole.step(force);
-  //     cart_pole.draw(canvas);
-  //     if (reward > 0 && cart_pole.step_count < 1000){
-  //       setTimeout(() => { this.eval_episode_demo(cart_pole); }, 20);
-  //     } else {
-  //       console.log("Episode ended at ", cart_pole.step_count)
-  //       const end = performance.now();
-  //       let force_text = (force < 0) ? force : `&nbsp;${force}`;
-  //       status.innerHTML = `Demo episode end at ${cart_pole.step_count}. ` +
-  //                          `Rendered in ${Math.ceil((end - this.prf_start)/cart_pole.step_count)}ms/step. Pole info ${cart_pole.text()}`;
-  //     }
-  //   })
-  // }
+window.pn.train(cart_pole, 10);
+// window.pn.train(cart_pole, 4000);
 
