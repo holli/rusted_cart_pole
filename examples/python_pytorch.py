@@ -79,16 +79,18 @@ def train(max_episodes, print_log_episodes=20):
         while True:
             old_observation = observation
 
+            # e-greedy action selection
             epsilon = max(0.02, 0.7 * pow(0.99, episode))
-
             if np.random.random() < epsilon:
                 action = np.random.choice(range(3))
             else:
-                # action is integer, either 0 or 1
-                # x = Variable(torch.from_numpy(np.expand_dims(old_observation, 0)), volatile=True)  # .cuda()
                 x = Variable(torch.from_numpy(np.expand_dims(old_observation, 0)))  # .cuda()
-                # action = model(x)[0].max(0)[1].data[0]  # same as np.argmax(model(x)[0].data.numpy()) but works both for cpu and gpu
                 action = model(x)[0].argmax().item()
+
+            # # another choice, Boltzmann Approach for action selection
+            # x = Variable(torch.from_numpy(np.expand_dims(old_observation, 0)))
+            # action_prob = torch.nn.functional.softmax(model(x)[0])
+            # action = np.random.choice([0, 1, 2], p=action_prob.detach().numpy())
 
             reward = C.step(pole, action-1)  # Actions are 0,1,2. Translate it to force -1, 0, 1
             observation = pole_observation(pole)
