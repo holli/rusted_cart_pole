@@ -109,7 +109,7 @@ impl CartPole {
     ) -> Result<(), plotters::drawing::DrawingAreaErrorKind<DB::ErrorType>> {
         root.fill(&colors::WHITE)?;
 
-        let y = 400;
+        let y = 300;
         root.draw(&Rectangle::new(
             [(0, y), (800, y + 1)],
             Into::<ShapeStyle>::into(&colors::BLACK).filled(),

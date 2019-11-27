@@ -48,7 +48,7 @@ pub extern "C" fn step(ptr: *mut CartPole, force: f32) -> i32 {
 
 #[no_mangle]
 pub extern "C" fn window_new() -> *mut PistonWindow {
-    let window: PistonWindow = WindowSettings::new("RustedCartPole", (800, 600))
+    let window: PistonWindow = WindowSettings::new("RustedCartPole", (800, 400))
         .exit_on_esc(true)
         // .controllers(false) // should they listen controller input
         .samples(1)

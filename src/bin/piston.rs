@@ -24,7 +24,7 @@ fn main() {
         right: false,
     };
 
-    let mut window: PistonWindow = WindowSettings::new("Hello Piston!", (800, 600))
+    let mut window: PistonWindow = WindowSettings::new("RustedCartPole", (800, 400))
         .exit_on_esc(true)
         // .controllers(false) // should they listen controller input
         .samples(1)
