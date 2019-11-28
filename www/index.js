@@ -5,7 +5,7 @@ wasm_setup();
 const canvas = document.getElementById("canvas");
 const status = document.getElementById("status");
 
-CartPole.prototype.observation = function(){
+CartPole.prototype.observation = function () {
   return [this.x, this.velocity, this.pole_angle, this.pole_velocity]
 }
 window.CartPole = CartPole
@@ -42,7 +42,7 @@ class UI {
   consoleLog(str) {
     console.log(str)
     const dom = document.getElementById('console')
-    if (dom.childElementCount > 10){ dom.removeChild(dom.lastChild) }
+    if (dom.childElementCount > 10) { dom.removeChild(dom.lastChild) }
     const div = document.createElement('div')
     div.textContent = str
     dom.prepend(div)
@@ -52,8 +52,8 @@ class UI {
     this.mode = mode
     this.consoleLog(`Mode changed to: ${mode}`)
 
-    for (let btn of document.getElementById('ui_type_buttons').children){ btn.classList.remove('active') }
-    document.getElementById('ui_type_'+this.mode).classList.add('active')
+    for (let btn of document.getElementById('ui_type_buttons').children) { btn.classList.remove('active') }
+    document.getElementById('ui_type_' + this.mode).classList.add('active')
     tf.nextFrame()
   }
 
@@ -65,14 +65,14 @@ class UI {
     var smoothed_tmp = []
 
     this.episode_scores.forEach((score, i) => {
-      scores.push({x: i, y: score})
+      scores.push({ x: i, y: score })
       smoothed_tmp.push(score)
-      smoothed_tmp = smoothed_tmp.slice(smoothed_tmp.length - 25, )
-      smoothed.push({x: i, y: smoothed_tmp.reduce((prev, curr) => prev + curr) / smoothed_tmp.length})
+      smoothed_tmp = smoothed_tmp.slice(smoothed_tmp.length - 25)
+      smoothed.push({ x: i, y: smoothed_tmp.reduce((prev, curr) => prev + curr) / smoothed_tmp.length })
     })
 
     tfvis.render.linechart(container,
-      {values: [scores, smoothed], series: ['Real', 'Smoothed']}, {xLabel: 'Episode', yLabel: 'Score'}
+      { values: [scores, smoothed], series: ['Real', 'Smoothed'] }, { xLabel: 'Episode', yLabel: 'Score' }
     );
   }
 
@@ -101,7 +101,7 @@ class UI {
       let action = null
 
       if (Math.random() < epsilon) {
-        action = Math.floor(Math.random()*3)
+        action = Math.floor(Math.random() * 3)
       } else {
         action = policy_network.predict_force(cart_pole) + 1
       }
@@ -115,34 +115,34 @@ class UI {
       }
     }
 
-    this.consoleLog(`Trained episode ${this.episode_num}, score: ${cart_pole.step_count}, epsilon: ${Number(Math.round(epsilon+'e2')+'e-2')}`)
+    this.consoleLog(`Trained episode ${this.episode_num}, score: ${cart_pole.step_count}, epsilon: ${Number(Math.round(epsilon + 'e2') + 'e-2')}`)
     this.reset_cart_pole()
 
     // by default all rewards are 1, but discounted if we failed at the game
     // rewards range [-100..0] are discounted starting from 1 to -1 for the last action
     let discounted_steps = 100
     let total_steps = ep_trans.length
-    if (ep_trans[ep_trans.length-1][2] == 0){
-      let discounted_reward = (x) => -(0.5 - x/discounted_steps)*2
+    if (ep_trans[ep_trans.length - 1][2] == 0) {
+      let discounted_reward = (x) => -(0.5 - x / discounted_steps) * 2
 
-      for (let idx = total_steps; idx > Math.max(0, total_steps-discounted_steps); idx--) {
-        ep_trans[idx-1][2] = discounted_reward(total_steps-idx)
+      for (let idx = total_steps; idx > Math.max(0, total_steps - discounted_steps); idx--) {
+        ep_trans[idx - 1][2] = discounted_reward(total_steps - idx)
       }
     }
     this.transitions_automatic.push(...ep_trans)
     let transitions_size = 3000
-    if (this.transitions_automatic.length > transitions_size){
-      this.transitions_automatic = this.transitions_automatic.slice(this.transitions_automatic.length - transitions_size, )
+    if (this.transitions_automatic.length > transitions_size) {
+      this.transitions_automatic = this.transitions_automatic.slice(this.transitions_automatic.length - transitions_size)
     }
 
     await policy_network.train_from_computer(this.transitions_automatic)
 
     if (this.mode == 'train') {
-      setTimeout(() => {this.trainEpisode()}, 50)
+      setTimeout(() => { this.trainEpisode() }, 50)
     }
   }
 
-  async trainShow(){
+  async trainShow() {
     this.changeMode('train_show')
     while (this.mode == 'train_show') { await this.trainEpisode() }
   }
@@ -162,8 +162,8 @@ class UI {
       cart_pole.draw(canvas)
       await tf.nextFrame();  // Unblock UI thread.
 
-      if (reward < 1){
-        this.episode_scores_model.push({x: this.episode_num, y: cart_pole.step_count})
+      if (reward < 1) {
+        this.episode_scores_model.push({ x: this.episode_num, y: cart_pole.step_count })
         console.log("modelGame episode ended at ", cart_pole.step_count)
         this.reset_cart_pole()
       }
@@ -173,20 +173,20 @@ class UI {
   async userPlay() {
     this.changeMode('user')
     let timing = 0
-    while (this.mode == 'user'){
+    while (this.mode == 'user') {
       while (performance.now() - timing < 60 && this.mode == 'user') {
         await tf.nextFrame()
       }
       timing = performance.now()
       let force = 0;
 
-      if (keyboard.is_down('ArrowLeft')){
+      if (keyboard.is_down('ArrowLeft')) {
         force = -1;
       } else if (keyboard.is_down('ArrowRight')) {
         force = 1
       }
-      this.transitions.push([cart_pole.observation(), force+1])
-      if (this.transitions.length > 500){ this.transitions = this.transitions.slice(this.transitions.length - 5000, ) }
+      this.transitions.push([cart_pole.observation(), force + 1])
+      if (this.transitions.length > 500) { this.transitions = this.transitions.slice(this.transitions.length - 5000) }
 
       let reward = cart_pole.step(force);
       cart_pole.draw(canvas);
@@ -195,7 +195,7 @@ class UI {
       // status.innerHTML = `Force ${force_text}. Rendered in ${Math.ceil(end - start)}ms. ` +
       //                    `Sample size ${this.transitions.length}. Pole info ${cart_pole.text()}`
 
-      if (reward < 1){
+      if (reward < 1) {
         console.log(`Resetting cartpole at ${cart_pole.text()}.`)
         let step_count = cart_pole.step_count
         // let start_game = false
@@ -204,7 +204,7 @@ class UI {
         cart_pole.draw(canvas)
 
         this.consoleLog(`Game ended at step ${step_count}. Sample size ${this.transitions.length}. Start new game with keypress.`)
-        for (let i = 0; i < 15; i++){
+        for (let i = 0; i < 15; i++) {
           await tf.nextFrame()
         }
 
@@ -230,10 +230,10 @@ class PolicyNetwork {
   getModel() {
     const model = tf.sequential();
 
-    model.add(tf.layers.dense({units: 8, inputShape: [4], activation: 'relu',}))
-    model.add(tf.layers.dense({units: 8, activation: 'relu',}));
+    model.add(tf.layers.dense({ units: 8, inputShape: [4], activation: 'relu', }))
+    model.add(tf.layers.dense({ units: 8, activation: 'relu', }));
     // model.add(tf.layers.dense({units: 3, activation: 'softmax'}));
-    model.add(tf.layers.dense({units: 3}));
+    model.add(tf.layers.dense({ units: 3 }));
 
     console.log("New Model: " + JSON.stringify(model.outputs[0].shape));
 
@@ -267,7 +267,7 @@ class PolicyNetwork {
       y.push(y_keys)
     })
 
-    let loss = await this.model.fit(tf.tensor(x), tf.tensor(y), {'epochs': 4, 'shuffle': true})
+    let loss = await this.model.fit(tf.tensor(x), tf.tensor(y), { 'epochs': 4, 'shuffle': true })
     loss = loss.history['loss'][0]
 
     console.log(`Trained model with ${transitions.length} transitions, loss was ${loss}`)
@@ -314,8 +314,8 @@ class PolicyNetwork {
 class Keyboard {
   constructor() {
     this.state = {}
-    window.addEventListener('keydown', (e) => {this.state[e.key] = true});
-    window.addEventListener('keyup', (e) => {this.state[e.key] = false});
+    window.addEventListener('keydown', (e) => { this.state[e.key] = true });
+    window.addEventListener('keyup', (e) => { this.state[e.key] = false });
     console.log("Keyboard handling set.")
   }
 
