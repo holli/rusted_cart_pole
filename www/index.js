@@ -1,4 +1,3 @@
-// import * as wasm from "rusted-cart-pole";
 import { CartPole, wasm_setup } from "rusted-cart-pole";
 
 wasm_setup();
@@ -18,52 +17,144 @@ window.cart_pole = cart_pole
 class UI {
   constructor() {
     this.transitions = []
-    this.episode_scores_model = [{x:0, y:0}]
-    this.episode_scores_user = [{x:0, y:0}]
+    this.transitions_automatic = []
+    // this.episode_scores_model = [{x:0, y:0}]
+    // this.episode_scores_user = [{x:0, y:0}]
+    this.episode_scores = []
+    this.episode_scores_smoothed = []
+    this.episode_scores_smoothed_avg = []
+
     this.episode_num = 0
-    this.gameOn = false
+    this.mode = ''
     this.setup()
   }
 
-  setup(){
-    document.getElementById("ui_type").onclick = () => {
-      if (this.gameOn) {
-        this.trainAndDemo()
-      } else {
-        this.playGame()
-      }
-    }
+  setup() {
+    document.getElementById("ui_type_user").onclick = () => { this.userPlay() }
+    document.getElementById("ui_type_train_show").onclick = () => { this.trainShow() }
+    document.getElementById("ui_type_train").onclick = () => { this.train() }
+    document.getElementById("ui_type_eval").onclick = () => { this.eval() }
+    this.consoleLog('Initialized...')
+    this.trainShow()
     this.plotScores()
+  }
+
+  consoleLog(str) {
+    console.log(str)
+    const dom = document.getElementById('console')
+    if (dom.childElementCount > 10){ dom.removeChild(dom.lastChild) }
+    const div = document.createElement('div')
+    div.textContent = str
+    dom.prepend(div)
+  }
+
+  changeMode(mode) {
+    this.mode = mode
+    this.consoleLog(`Mode changed to: ${mode}`)
+
+    for (let btn of document.getElementById('ui_type_buttons').children){ btn.classList.remove('active') }
+    document.getElementById('ui_type_'+this.mode).classList.add('active')
+    tf.nextFrame()
   }
 
   plotScores() {
     const container = document.getElementById('score-container')
+
+    const scores = []
+    const smoothed = []
+    var smoothed_tmp = []
+
+    this.episode_scores.forEach((score, i) => {
+      scores.push({x: i, y: score})
+      smoothed_tmp.push(score)
+      smoothed_tmp = smoothed_tmp.slice(smoothed_tmp.length - 25, )
+      smoothed.push({x: i, y: smoothed_tmp.reduce((prev, curr) => prev + curr) / smoothed_tmp.length})
+    })
+
     tfvis.render.linechart(container,
-    // tfvis.render.scatterplot(container,
-      {values: [this.episode_scores_model, this.episode_scores_user], series: ['Model', 'User']}, {
-      xLabel: 'Episode', yLabel: 'Score'
-    });
+      {values: [scores, smoothed], series: ['Real', 'Smoothed']}, {xLabel: 'Episode', yLabel: 'Score'}
+    );
   }
 
-  reset_cart_pole(){
-    cart_pole.reset()
+  reset_cart_pole() {
     this.episode_num += 1
+    this.episode_scores.push(cart_pole.step_count)
+    this.plotScores()
+    cart_pole.reset()
   }
 
-  async trainAndDemo(){
-    this.gameOn = false
-    document.getElementById("ui_type").innerHTML = 'Training'
-    document.getElementById("ui_type").className = 'btn btn-secondary'
+  async trainUserData() {
+    this.changeMode('train')
     await tf.nextFrame()
     await policy_network.train_from_user(cart_pole, this.transitions)
-    this.modelGame()
+    this.train()
+  }
+
+  async trainEpisode() {
+    const ep_trans = []
+    let epsilon = Math.max(0.02, 0.7 * Math.pow(0.99, this.episode_num))
+    let reward = 1;
+    cart_pole.reset()
+
+    while (reward > 0 && cart_pole.step_count < 1000 && (this.mode == 'train' || this.mode == 'train_show')) {
+      let observation = cart_pole.observation()
+      let action = null
+
+      if (Math.random() < epsilon) {
+        action = Math.floor(Math.random()*3)
+      } else {
+        action = policy_network.predict_force(cart_pole) + 1
+      }
+
+      reward = cart_pole.step(action - 1)
+      ep_trans.push([observation, action, reward])
+
+      if (this.mode == 'train_show') {
+        cart_pole.draw(canvas)
+        await tf.nextFrame()
+      }
+    }
+
+    this.consoleLog(`Trained episode ${this.episode_num}, score: ${cart_pole.step_count}, epsilon: ${Number(Math.round(epsilon+'e2')+'e-2')}`)
+    this.reset_cart_pole()
+
+    // by default all rewards are 1, but discounted if we failed at the game
+    // rewards range [-100..0] are discounted starting from 1 to -1 for the last action
+    let discounted_steps = 100
+    let total_steps = ep_trans.length
+    if (ep_trans[ep_trans.length-1][2] == 0){
+      let discounted_reward = (x) => -(0.5 - x/discounted_steps)*2
+
+      for (let idx = total_steps; idx > Math.max(0, total_steps-discounted_steps); idx--) {
+        ep_trans[idx-1][2] = discounted_reward(total_steps-idx)
+      }
+    }
+    this.transitions_automatic.push(...ep_trans)
+    let transitions_size = 3000
+    if (this.transitions_automatic.length > transitions_size){
+      this.transitions_automatic = this.transitions_automatic.slice(this.transitions_automatic.length - transitions_size, )
+    }
+
+    await policy_network.train_from_computer(this.transitions_automatic)
+
+    if (this.mode == 'train') {
+      setTimeout(() => {this.trainEpisode()}, 50)
+    }
+  }
+
+  async trainShow(){
+    this.changeMode('train_show')
+    while (this.mode == 'train_show') { await this.trainEpisode() }
+  }
+
+  async train() {
+    this.changeMode('train')
+    this.trainEpisode()
   }
 
   async modelGame() {
-    this.gameOn = false
-    document.getElementById("ui_type").innerHTML = 'Computer'
-    document.getElementById("ui_type").className = 'btn btn-info'
-    while (!this.gameOn) {
+    this.changeMode('eval')
+    while (this.mode == 'eval') {
       // this.prf_start = performance.now();
 
       let force = policy_network.predict_force(cart_pole)
@@ -75,18 +166,15 @@ class UI {
         this.episode_scores_model.push({x: this.episode_num, y: cart_pole.step_count})
         console.log("modelGame episode ended at ", cart_pole.step_count)
         this.reset_cart_pole()
-        this.plotScores()
       }
     }
   }
 
-  async playGame() {
-    this.gameOn = true
-    document.getElementById("ui_type").innerHTML = 'User'
-    document.getElementById("ui_type").className = 'btn btn-primary'
+  async userPlay() {
+    this.changeMode('user')
     let timing = 0
-    while (this.gameOn){
-      while (performance.now() - timing < 60 && this.gameOn) {
+    while (this.mode == 'user'){
+      while (performance.now() - timing < 60 && this.mode == 'user') {
         await tf.nextFrame()
       }
       timing = performance.now()
@@ -110,13 +198,12 @@ class UI {
       if (reward < 1){
         console.log(`Resetting cartpole at ${cart_pole.text()}.`)
         let step_count = cart_pole.step_count
-        let start_game = false
-        this.episode_scores_user.push({x: this.episode_num, y: cart_pole.step_count})
+        // let start_game = false
+        // this.episode_scores_user.push({x: this.episode_num, y: cart_pole.step_count})
         this.reset_cart_pole()
-        this.plotScores()
         cart_pole.draw(canvas)
 
-        status.innerHTML = `Game ended at step ${step_count}. Sample size ${this.transitions.length}. Start new game with keypress.`
+        this.consoleLog(`Game ended at step ${step_count}. Sample size ${this.transitions.length}. Start new game with keypress.`)
         for (let i = 0; i < 15; i++){
           await tf.nextFrame()
         }
@@ -127,10 +214,6 @@ class UI {
         }
       }
 
-      // await tf.nextFrame()
-      // // window.requestAnimationFrame(() => this.playGame());
-      // await tf.nextFrame()
-      // await tf.nextFrame()
     }
   }
 }
@@ -174,33 +257,7 @@ class PolicyNetwork {
     })
   }
 
-  // async eval_episode(cart_pole) {
-  //   cart_pole.reset()
-  //   this.prf_start = performance.now();
-  //   status.innerHTML = `Running demo episode...`;
-  //   let isDone = false;
-  //   while (!isDone){
-  //     tf.tidy(() => {
-  //       const logits = this.model.predict(tf.tensor2d([cart_pole.observation()]));
-  //       const action = logits.argMax(1)
-  //       const force = action.arraySync()[0] - 1
-  //       // console.log("Force: ", force);
-  //       const reward = cart_pole.step(force);
-  //       cart_pole.draw(canvas);
-  //       if (reward == 0 || cart_pole.step_count > 1000){
-  //         isDone = true
-  //       }
-  //     })
-  //     await tf.nextFrame();  // Unblock UI thread.
-  //   }
-
-  //   console.log("Episode ended at ", cart_pole.step_count)
-  //   const end = performance.now();
-  //   status.innerHTML = `Demo episode end at ${cart_pole.step_count}. ` +
-  //                       `Rendered in ${Math.ceil((end - this.prf_start)/cart_pole.step_count)}ms/step. Pole info ${cart_pole.text()}`;
-  // }
-
-  async train_from_user(pole_cart, transitions) {
+  async train_from_user(transitions) {
     let x = [], y = []
 
     transitions.forEach(trans => {
@@ -218,107 +275,38 @@ class PolicyNetwork {
     return loss
   }
 
-  async train_game(pole_cart, max_episodes) {
-    let transitions = []
-    let episodes = []
-
-    for (let episode = 0; episode < max_episodes; episode++) {
-      this.train_count += 1
-      pole_cart.reset()
-      const ep_trans = []
-      let observation = cart_pole.observation
-      let epsilon = Math.max(0.02, 0.7 * Math.pow(0.99, episode))
-      let isDone = false;
-      while (!isDone){
-        let old_observation = observation
-        let action = null
-
-        if (Math.random() < epsilon) {
-          action = Math.floor(Math.random()*3)
-        } else {
-          action = tf.tidy(() => {
-            const logits = this.model.predict(tf.tensor2d([observation]));
-            const action = logits.argMax(1)
-            return action.arraySync()[0]
-          })
-        }
-
-        let reward = cart_pole.step(action - 1)
-        observation = cart_pole.observation
-        ep_trans.push([old_observation, action, reward, observation])
-
-        if (reward == 0 || cart_pole.step_count > 400) {
-          isDone = true
-        }
-
-        if (this.abort_signal) {
-          return false
-        }
+  async train_from_computer(transitions) {
+    let minibatch_size = 32
+    // let loss_info = ''
+    if (transitions.length >= minibatch_size) {
+      // This is probably so wrong way to do it. There is probably much more elegant way of modifying
+      // the tensors directly and not copying so much but I didn't use time to check tensorflow.js manuals.
+      let batch_x = []
+      let batch_y_rewards = []
+      let batch_y_actions = []
+      for (let i = 0; i < minibatch_size; i++) {
+        let arr = transitions[Math.floor(Math.random() * transitions.length)]
+        batch_x.push(arr[0])
+        batch_y_actions.push(arr[1])
+        batch_y_rewards.push(arr[2])
       }
 
-      // by default all rewards are 1, but discounted if we failed at the game
-      // rewards range [-100..0] are discounted starting from 1 to -1 for the last action
-      let discounted_steps = 100
-      let total_steps = ep_trans.length
-      if (ep_trans[ep_trans.length-1][2] == 0){
-        let discounted_reward = (x) => -(0.5 - x/discounted_steps)*2
+      window.test_res = batch_x
+      batch_x = tf.tensor(batch_x)
+      let batch_y = this.model.predict(batch_x)
+      window.test_b = batch_y
+      batch_y = batch_y.arraySync()
 
-        for (let idx = total_steps; idx > Math.max(0, total_steps-discounted_steps); idx--) {
-          ep_trans[idx-1][2] = discounted_reward(total_steps-idx)
-        }
-      }
-      // console.log(ep_trans.map(x => x[2]))
-      transitions.push(...ep_trans)
-      let transitions_size = 3000
-      if (transitions.length > transitions_size){
-        transitions = transitions.slice(transitions.length - transitions_size, )
+      for (let i = 0; i < minibatch_size; i++) {
+        batch_y[i][batch_y_actions[i]] = batch_y_rewards[i]
       }
 
-      episodes.push(cart_pole.step_count)
-      if (episode % 100 == 0 || episode == max_episodes-1){
-        await this.eval_episode(cart_pole);
-      }
-
-      let minibatch_size = 32
-      let loss_info = ""
-      if (transitions.length >= minibatch_size){
-        let batch_x = []
-        let batch_y_rewards = []
-        let batch_y_actions = []
-        for (let i = 0; i < minibatch_size; i++){
-          let arr = transitions[Math.floor(Math.random() * transitions.length)]
-          batch_x.push(arr[0])
-          batch_y_actions.push(arr[1])
-          batch_y_rewards.push(arr[2])
-        }
-
-        window.test_res = batch_x
-        batch_x = tf.tensor(batch_x)
-        let batch_y = this.model.predict(batch_x)
-        window.test_b = batch_y
-        batch_y = batch_y.arraySync()
-
-        for (let i = 0; i < minibatch_size; i++){
-          batch_y[i][batch_y_actions[i]] = batch_y_rewards[i]
-        }
-
-        // This is probably so wrong way to do it. There is probably much
-        // more elegant way of modifying the tensors directly and not copying
-        // so much but I didn't use time to check tensorflow.js manuals
-        let loss = await this.model.fit(batch_x, tf.tensor(batch_y))
-        loss_info = loss.history['loss'][0]
-      }
-
-      if (episode % 20 == 0 || episode == max_episodes-1){
-        let episodes_mean = episodes.reduce((a,b) => a + b, 0) / episodes.length
-        episodes = []
-        console.log("Ended episode ", episode,
-                    ". Avg steps: ", episodes_mean, ". Epsilon: ", epsilon, ". Loss:", loss_info,
-                    ". Transitions.len: ", transitions.length)
-      }
-
+      return await this.model.fit(batch_x, tf.tensor(batch_y))
+      // loss_info = loss.history['loss'][0]
     }
+
   }
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -344,10 +332,7 @@ const keyboard = new Keyboard()
 const policy_network = new PolicyNetwork()
 window.PolicyNetwork = PolicyNetwork
 window.policy_network = policy_network
-// window.pn.eval_episode(cart_pole);
-// window.pn.train(cart_pole, 10);
-// window.pn.train(cart_pole, 4000);
 
 const ui = new UI()
 window.ui = ui
-ui.playGame()
+

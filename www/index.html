@@ -8,22 +8,22 @@
   <body>
 
     <main class="container">
-      <h1>Plotters WebAssembly Demo</h1>
-      <canvas id="canvas" width="800" height="400" style="border: 1px solid #660000;"></canvas>
-      <div class="my-5"><div class="row">
-        <div class="col">
-          <button id='ui_type' class="btn btn-primary">Type</button>
+      <h1 class="mb-5">Plotters WebAssembly Demo</h1>
+      <canvas id="canvas" class="mb-5" width="800" height="400" style="border: 1px solid #660000;"></canvas>
+      <div class="mb-5"><div class="row">
+        <div class="col-2" id="ui_type_buttons">
+          <button id='ui_type_user' class="btn btn-outline-primary mb-2">User Playing</button><br/>
+          <button id='ui_type_train_show' class="btn btn-outline-primary mb-2">Train & Show</button><br/>
+          <button id='ui_type_train' class="btn btn-outline-primary mb-2">Train</button><br/>
+          <button id='ui_type_eval' class="btn btn-outline-primary mb-2">Eval</button>
         </div>
-        <div class="col-6">
-          One of three columns
+        <div class="col-6" id="console">
+
         </div>
-        <div class="col-3">
+        <div class="col-4">
           <div id="score-container" style="height: 200px;"></div>
         </div>
       </div></div>
-      <div id="status">Loading WebAssembly...</div>
-      <div id="control">
-      </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.2/dist/tf.min.js"></script>
