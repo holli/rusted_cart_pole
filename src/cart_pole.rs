@@ -1,9 +1,9 @@
 // CartPole implementation. Quite close to
 // https://github.com/openai/gym/blob/master/gym/envs/classic_control/cartpole.py
 
-use rand::distributions::{Distribution, Uniform};
 use plotters::prelude::*;
 use plotters::style::colors;
+use rand::distributions::{Distribution, Uniform};
 use wasm_bindgen::prelude::*;
 
 pub const CARTPOLE_THRESHOLD_X: f32 = 2.4;
@@ -127,11 +127,10 @@ impl CartPole {
         ))?;
 
         // Pole
+        let y = y as f32;
         let pole_length = 100.0;
         let pole_x = pole_length * self.pole_angle.sin();
         let pole_y = pole_length * self.pole_angle.cos();
-
-        // let pole_width_vector = (5.0 * self.pole_angle.cos(), 5.0 * self.pole_angle.sin());
 
         let points = [
             (x as i32, y as i32),
@@ -139,7 +138,7 @@ impl CartPole {
         ];
         root.draw(&PathElement::new(
             points.to_vec(),
-            Into::<ShapeStyle>::into(&colors::BLACK).filled(),
+            Into::<ShapeStyle>::into(&RGBColor(160, 80, 0)).stroke_width(5),
         ))?;
 
         Ok(())
