@@ -138,7 +138,7 @@ impl CartPole {
         ];
         root.draw(&PathElement::new(
             points.to_vec(),
-            Into::<ShapeStyle>::into(&RGBColor(160, 80, 0)).stroke_width(5),
+            Into::<ShapeStyle>::into(&RGBColor(160, 80, 0)).stroke_width(4),
         ))?;
 
         Ok(())

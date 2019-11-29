@@ -21,7 +21,6 @@ wee_alloc = "*"
 web-sys = { version = "*", features = ["HtmlCanvasElement"] }
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
-# plotters = {path = "../plotters", version = "*", default_features = false, features = ["piston"] }
 plotters = {git = "https://github.com/holli/plotters", branch = "pub_piston_backend", version = "*", default_features = false, features = ["piston"] }
 piston = "*"
 piston_window = "*"

@@ -1,8 +1,14 @@
+# cargo build --lib
+#
+
+
+
 import numpy as np
 import random
 import signal
 import collections
 import time
+from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -28,8 +34,8 @@ ffi.cdef("""
     void window_free(window_ptr);
     void window_draw(window_ptr, cart_pole_ptr);
 """)
-C = ffi.dlopen(
-    '/home/ohu/koodi/kesken/rusted_cart_pole/target/debug/librusted_cart_pole.so')
+ffi_file = Path(__file__).resolve().parent.parent / 'target/debug/librusted_cart_pole.so'
+C = ffi.dlopen(str(ffi_file))
 
 
 def get_model(obs=4, acts=3):
@@ -102,7 +108,7 @@ def train(max_episodes, print_log_episodes=20):
 
             # Boltzmann Approach for action selection
             x = Variable(torch.from_numpy(np.expand_dims(old_observation, 0)))
-            action_prob = torch.nn.functional.softmax(model(x)[0])
+            action_prob = torch.nn.functional.softmax(model(x)[0], dim=0)
             action = np.random.choice([0, 1, 2], p=action_prob.detach().numpy())
 
             reward = C.step(pole, action-1)  # Actions are 0,1,2. Translate it to force -1, 0, 1
@@ -122,7 +128,6 @@ def train(max_episodes, print_log_episodes=20):
         total_steps = len(ep_trans)
         if ep_trans[-1][2] == 0:  # failed at the game, last reward == 0
             discounted_rewards = [(1 - x/discounted_steps) for x in range(0, discounted_steps+1)]
-            print(discounted_rewards)
 
             for idx in range(total_steps, max(0, total_steps-discounted_steps), -1):
                 ep_trans[idx-1][2] = discounted_rewards.pop()
