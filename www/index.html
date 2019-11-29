@@ -2,19 +2,19 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Rusted Cart Pole: Wasm edition</title>
+    <title>Rusted Cart Pole: WebAssembly Demo</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   </head>
   <body>
 
     <main class="container">
-      <h1 class="mb-5">Plotters WebAssembly Demo</h1>
+      <h1 class="mb-5">Rusted Cart Pole: WebAssembly Demo</h1>
       <canvas id="canvas" class="mb-5" width="800" height="400" style="border: 1px solid #660000;"></canvas>
       <div class="mb-5"><div class="row">
         <div class="col-2" id="ui_type_buttons">
           <button id='ui_type_user' class="btn btn-outline-primary mb-2">User Playing</button><br/>
           <button id='ui_type_train_show' class="btn btn-outline-primary mb-2">Train & Show</button><br/>
-          <button id='ui_type_train' class="btn btn-outline-primary mb-2">Train</button><br/>
+          <button id='ui_type_train' class="btn btn-outline-primary mb-2">Fast Train</button><br/>
           <button id='ui_type_eval' class="btn btn-outline-primary mb-2">Eval & Show</button><br/>
           <button id='ui_type_pause' class="btn btn-outline-primary mb-2">Pause</button>
         </div>
@@ -27,8 +27,8 @@
       </div></div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.2/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.1.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.1.0/dist/tfjs-vis.umd.min.js"></script>
 
     <script src="./bootstrap.js"></script>
   </body>
