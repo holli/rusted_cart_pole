@@ -131,7 +131,7 @@ impl CartPole {
         let pole_x = pole_length * self.pole_angle.sin();
         let pole_y = pole_length * self.pole_angle.cos();
 
-        let pole_width_vector = (5.0 * self.pole_angle.cos(), 5.0 * self.pole_angle.sin());
+        // let pole_width_vector = (5.0 * self.pole_angle.cos(), 5.0 * self.pole_angle.sin());
 
         let points = [
             (x as i32, y as i32),
