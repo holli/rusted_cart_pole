@@ -3,57 +3,34 @@ name = "rusted_cart_pole"
 version = "0.1.0"
 authors = ["Olli Huotari <olli.huotari@iki.fi>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Example of using Rust code in Python and Wasm/JS for machine learning"
+homepage = "https://github.com/holli/rusted_cart_pole"
+repository = "https://github.com/holli/rusted_cart_pole"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-# not by default
 [profile.release]
 debug = true
 lto = true
 
 [dependencies]
-# plotters = {version = "*", default_features = false, features = ["piston"] }
-# plotters = {path = "../plotters", version = "*", default_features = false, features = ["piston"] }
-# piston = "*"
-# piston_window = "*"
 wasm-bindgen = "*"
 wee_alloc = "*"
 web-sys = { version = "*", features = ["HtmlCanvasElement"] }
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
-plotters = {path = "../plotters", version = "*", default_features = false, features = ["piston"] }
+# plotters = {path = "../plotters", version = "*", default_features = false, features = ["piston"] }
+plotters = {git = "https://github.com/holli/plotters", branch = "pub_piston_backend", version = "*", default_features = false, features = ["piston"] }
 piston = "*"
 piston_window = "*"
 rand = "0.7.2"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-plotters = {path = "../plotters", version = "*", default_features = false }
+plotters = {git = "https://github.com/holli/plotters", branch = "pub_piston_backend", version = "*", default_features = false }
 rand = {version = "0.7.2", features = ["wasm-bindgen"] }
 wasm-bindgen = "*"
-# js-sys = "*"
-# web-sys = "*"
 web-sys = { version = "*", features = ["console"] }
 console_error_panic_hook = { version = "0.1.1" } # increases size, maybe avoid in production
-# log = "*"
-# console_log = { version = "0.1", optional = true }
-# console_log = { version = "0.1" }
-# console_error_panic_hook = "0.1.6"
-
-
-
-
-# [target.'cfg(target_arch = "wasm32")'.dependencies]
-# stdweb = "*"
-
-
-
-# [dependencies.web-sys]
-# version = "0.3.29"
-# features = [ "console" ]
-
-#[target."cfg(debug_assertions)".dependencies]
-#console_error_panic_hook = "0.1.5"
 
