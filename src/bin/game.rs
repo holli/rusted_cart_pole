@@ -1,11 +1,9 @@
+// cargo run --bin game
+
 use piston::event_loop::*;
 use piston::input::*;
-#[allow(unused_imports)]
 use piston_window::{EventLoop, PistonWindow, WindowSettings};
 use plotters::prelude::*;
-#[allow(unused_imports)]
-use plotters::style::colors;
-#[allow(unused_imports)]
 use std::panic;
 extern crate piston_window;
 use rusted_cart_pole::*;
@@ -30,7 +28,6 @@ fn main() {
     let mut events = Events::new(EventSettings::new().ups(20));
 
     let mut cp = CartPole::new();
-
 
     while let Some(event) = events.next(&mut window) {
         // Saving keypresses to keys struct
@@ -60,13 +57,12 @@ fn main() {
             };
             let reward = cp.step(force);
             if reward == 0 {
-                // println!("CartPole ended, step count {}. {}", cp.step_count, cp);
                 println!("CartPole ended, {}", cp);
                 cp.reset();
             }
         }
 
-        // Rendering stuff at a constant rate
+        // Piston rendering graphics at a constant rate
         if let Some(arg) = event.render_args() {
             window.draw_2d(&event, |c, g, _| {
                 let b = PistonBackend::new(
@@ -75,11 +71,6 @@ fn main() {
                     c,
                     g,
                 );
-                // let b = PistonBackend {
-                //     size: (arg.draw_size[0], arg.draw_size[1]),
-                //     scale: arg.window_size[0] / arg.draw_size[0] as f64,
-                //     context: c, graphics: g,
-                // };
 
                 cp.draw(b.into_drawing_area())
                     .expect("Problem in plotter_cart_pole drawing.");
