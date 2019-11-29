@@ -55,13 +55,15 @@ class UI {
 
   plotScores() {
     tfvis.render.linechart(this.vis_container,
+      // Newer version of tfvis would have supported colors, but then again it didn't support non-continuous lines
       // { values: [this.vis_real, this.vis_smoothed, this.vis_eval_real, this.vis_eval_smoothed],
       //   series: ['Train', 'Train Smoothed', 'Eval', 'Eval Smoothed'] },
-      { values: [this.vis_smoothed, this.vis_eval_smoothed,],
-        series: ['Train', 'Eval',] },
-        { xLabel: 'Episode', yLabel: 'Score',
-          // seriesColors: ["rgb(255, 0, 200)", "rgb(0, 0, 200, 1)", "rgb(255, 153, 0, .5)", "rgb(255, 153, 0, 1)",] }
-          // seriesColors: ["#00ff00", "#00ff00","#00ff00","#00ff00"] }
+      {
+        values: [this.vis_smoothed, this.vis_eval_smoothed,],
+        series: ['Train', 'Eval',]
+      },
+      {
+        xLabel: 'Episode', yLabel: 'Score',
       }
     )
   }
@@ -77,14 +79,14 @@ class UI {
   }
 
   trainSaveScore(score) {
-    this.vis_real.push({x: this.episode_num, y: score })
+    this.vis_real.push({ x: this.episode_num, y: score })
     this.vis_smoothed_tmp.push(score)
     this.vis_smoothed_tmp = this.vis_smoothed_tmp.slice(this.vis_smoothed_tmp.length - 25)
     this.vis_smoothed.push({ x: this.episode_num, y: this.vis_smoothed_tmp.reduce((prev, curr) => prev + curr) / this.vis_smoothed_tmp.length })
   }
 
   evalSaveScore(score) {
-    this.vis_eval_real.push({x: this.episode_num, y: score })
+    this.vis_eval_real.push({ x: this.episode_num, y: score })
     this.vis_eval_smoothed_tmp.push(score)
     this.vis_eval_smoothed_tmp = this.vis_eval_smoothed_tmp.slice(this.vis_eval_smoothed_tmp.length - 25)
     this.vis_eval_smoothed.push({ x: this.episode_num, y: this.vis_eval_smoothed_tmp.reduce((prev, curr) => prev + curr) / this.vis_eval_smoothed_tmp.length })
@@ -99,7 +101,7 @@ class UI {
     this.changeMode('user')
     let timing = 0
     const cart_pole = this.cartPoleNew()
-    for (let i = 0; i<5; i++) { await tf.nextFrame() }
+    for (let i = 0; i < 5; i++) { await tf.nextFrame() }
     while (this.mode == 'user') {
       if (cart_pole.step_count == 0) {
         this.consoleLog('Game running, use left/right arrow-keys to move.')
@@ -123,7 +125,7 @@ class UI {
       cart_pole.draw(canvas);
       // const end = performance.now()
 
-      if (cart_pole.step_count % 100 == 0){ this.userDataTrain() }
+      if (cart_pole.step_count % 100 == 0) { this.userDataTrain() }
 
       if (reward < 1) {
         this.consoleLog(`User episode ${this.episode_num}, score: ${cart_pole.step_count}. Press arrow-keys to start.`)
@@ -206,7 +208,7 @@ class UI {
       if (this.episode_num % 10 == 0 || this.episode_num <= 1) {
         await this.evalEpisode(cart_pole)
       }
-      if (this.episode_num % 10 == 0 || this.episode_num < 10){
+      if (this.episode_num % 10 == 0 || this.episode_num < 10) {
         // for some reason continous tfvis.render causes memory bloating, so not doing too often
         this.plotScores()
       }
@@ -214,20 +216,20 @@ class UI {
     }
 
     if (this.mode == 'train') {
-      setTimeout(() => { if (this.mode==mode_original) { this.trainEpisode(cart_pole) } }, 10) // let some time for browser to handle ui stuff
+      setTimeout(() => { if (this.mode == mode_original) { this.trainEpisode(cart_pole) } }, 10) // let some time for browser to handle ui stuff
     }
   }
 
   async trainShow() {
     this.changeMode('train_show')
-    for (let i = 0; i<5; i++) { await tf.nextFrame() }
+    for (let i = 0; i < 5; i++) { await tf.nextFrame() }
     const cart_pole = this.cartPoleNew()
     while (this.mode == 'train_show') { await this.trainEpisode(cart_pole) }
   }
 
   async train() {
     this.changeMode('train')
-    for (let i = 0; i<5; i++) { await tf.nextFrame() }
+    for (let i = 0; i < 5; i++) { await tf.nextFrame() }
     this.trainEpisode(this.cartPoleNew())
   }
 
