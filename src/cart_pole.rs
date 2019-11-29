@@ -5,7 +5,7 @@ use plotters::style::colors;
 use wasm_bindgen::prelude::*;
 
 pub const CARTPOLE_THRESHOLD_X: f32 = 2.4;
-pub const CARTPOLE_THRESHOLD_POLE: f32 = 45.0 * 2.0 * std::f32::consts::PI / 360.0;
+pub const CARTPOLE_THRESHOLD_POLE: f32 = 24.0 * 2.0 * std::f32::consts::PI / 360.0;
 pub const CARTPOLE_UPDATE_TIMESTEP: f32 = 0.02;
 
 // https://github.com/openai/gym/blob/master/gym/envs/classic_control/cartpole.py

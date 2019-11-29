@@ -62,12 +62,26 @@ pole = C.new()
 model = get_model().double()  # .cuda()
 
 
+def eval_model():
+    C.reset(pole)
+    reward = 1
+
+    while reward != 0 and pole.step_count < 1000:
+        observation = pole_observation(pole)
+        x = Variable(torch.from_numpy(np.expand_dims(observation, 0)))  # .cuda()
+        action = model(x)[0].argmax().item()
+        reward = C.step(pole, action-1)
+
+    return pole.step_count
+
+
 def train(max_episodes, print_log_episodes=20):
     transitions = collections.deque(maxlen=3000)
     episodes = collections.deque(maxlen=100)
+    episodes_eval = collections.deque(maxlen=10)
     start_time = time.time()
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     loss_op = torch.nn.MSELoss()
 
     for episode in range(max_episodes):
@@ -75,28 +89,27 @@ def train(max_episodes, print_log_episodes=20):
         observation = pole_observation(pole)
         ep_trans = collections.deque(maxlen=200)
 
-
         while True:
             old_observation = observation
 
             # e-greedy action selection
-            epsilon = max(0.02, 0.7 * pow(0.99, episode))
-            if np.random.random() < epsilon:
-                action = np.random.choice(range(3))
-            else:
-                x = Variable(torch.from_numpy(np.expand_dims(old_observation, 0)))  # .cuda()
-                action = model(x)[0].argmax().item()
+            # epsilon = max(0.02, 0.7 * pow(0.99, episode))
+            # if np.random.random() < epsilon:
+            #     action = np.random.choice(range(3))
+            # else:
+            #     x = Variable(torch.from_numpy(np.expand_dims(old_observation, 0)))  # .cuda()
+            #     action = model(x)[0].argmax().item()
 
-            # # another choice, Boltzmann Approach for action selection
-            # x = Variable(torch.from_numpy(np.expand_dims(old_observation, 0)))
-            # action_prob = torch.nn.functional.softmax(model(x)[0])
-            # action = np.random.choice([0, 1, 2], p=action_prob.detach().numpy())
+            # Boltzmann Approach for action selection
+            x = Variable(torch.from_numpy(np.expand_dims(old_observation, 0)))
+            action_prob = torch.nn.functional.softmax(model(x)[0])
+            action = np.random.choice([0, 1, 2], p=action_prob.detach().numpy())
 
             reward = C.step(pole, action-1)  # Actions are 0,1,2. Translate it to force -1, 0, 1
             observation = pole_observation(pole)
             ep_trans.append([old_observation, action, reward, observation])
 
-            if reward == 0 or pole.step_count > 400:
+            if reward == 0 or pole.step_count > 500:
                 break
 
             if keyboard_input.key_pressed:
@@ -104,11 +117,12 @@ def train(max_episodes, print_log_episodes=20):
                 import ipdb; ipdb.set_trace()
 
         # by default all rewards are 1, but discounted if we failed at the game
-        # rewards range [-100..0] are discounted starting from 1 to -1 for the last action
-        discounted_steps = 100
+        # rewards range [-xxx..0] are discounted starting from 1 to 0 for the last action
+        discounted_steps = 50
         total_steps = len(ep_trans)
         if ep_trans[-1][2] == 0:  # failed at the game, last reward == 0
-            discounted_rewards = [(0.5 - x/discounted_steps)*2 for x in range(0, discounted_steps+1)]
+            discounted_rewards = [(1 - x/discounted_steps) for x in range(0, discounted_steps+1)]
+            print(discounted_rewards)
 
             for idx in range(total_steps, max(0, total_steps-discounted_steps), -1):
                 ep_trans[idx-1][2] = discounted_rewards.pop()
@@ -117,10 +131,14 @@ def train(max_episodes, print_log_episodes=20):
         episodes.append(len(ep_trans))
 
         if episode % print_log_episodes == 0:
-            print('Episode {}, last-100-avg-reward: {}, epsilon: {:.2f}, seconds: {:.2f}'.format(episode, sum(episodes)//len(episodes), epsilon, time.time()-start_time))
-        if sum(episodes)/len(episodes) > 195:
-            print('SOLVED AT EPISODE {}, time: {:.2f}s'.format(episode, time.time()-start_time))
-            return episode
+            episodes_eval.append(eval_model())
+            episodes_eval_avg = sum(episodes_eval)//len(episodes_eval)
+            print('Episode {}, eval-avg-reward: {}, train-avg-reward: {}, seconds: {:.2f}'.format(
+                episode, episodes_eval_avg, sum(episodes)//len(episodes), time.time()-start_time))
+
+            if episodes_eval_avg > 500:
+                print('Clous enough at episode {}, time: {:.2f}s'.format(episode, time.time()-start_time))
+                return episode
 
         minibatch_size = 32
         if len(transitions) >= minibatch_size:
@@ -173,7 +191,7 @@ if __name__ == "__main__":
     window = C.window_new()
 
     print("Showing demos")
-    for i in range(5):
+    for i in range(3):
         run_model(window)
 
     # import ipdb; ipdb.set_trace()
