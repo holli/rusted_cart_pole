@@ -20,12 +20,12 @@
     "rust",
     "webpack"
   ],
-  "author": "Ashley Williams <ashley666ashley@gmail.com>",
+  "author": "...",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rustwasm/create-wasm-app/issues"
+    "url": "https://github.com/holli/rusted_cart_pole/issues"
   },
-  "homepage": "https://github.com/rustwasm/create-wasm-app#readme",
+  "homepage": "https://github.com/holli/rusted_cart_pole",
   "dependencies": {
     "rusted-cart-pole": "file:../pkg"
   },
