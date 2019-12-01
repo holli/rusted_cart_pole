@@ -1,6 +1,17 @@
-# cargo build --lib
+# Program trains the network 3000 episodes or until its good enough
+# and then it shows the result by playing couple demo runs.
 #
-
+# Usage:
+#   cargo build --lib
+#   python python_pytorch.py
+#
+# You need Pytorch version 1.2.0
+# Cargo builds lib to target/debug/librusted_cart_pole.so and it's used with FFI
+#   https://cffi.readthedocs.io/en/latest/
+#
+# If you would like to release pypi or anaconda packages to enable python interface
+# you might want to check out e.g. https://github.com/PyO3/maturin
+#
 
 
 import numpy as np
@@ -176,7 +187,6 @@ def run_model(window):
         x = Variable(torch.from_numpy(np.expand_dims(observation, 0)))  # .cuda()
         action = model(x)[0].argmax().item()
 
-        # reward = C.step(pole, 0)
         reward = C.step(pole, action-1)
         time.sleep(0.02)
 
@@ -198,8 +208,6 @@ if __name__ == "__main__":
     print("Showing demos")
     for i in range(3):
         run_model(window)
-
-    # import ipdb; ipdb.set_trace()
 
     C.window_free(window)
 
