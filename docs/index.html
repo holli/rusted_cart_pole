@@ -1,35 +1,94 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Rusted Cart Pole: WebAssembly Demo</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-  </head>
-  <body>
 
-    <main class="container">
-      <h1 class="mb-5">Rusted Cart Pole: WebAssembly Demo</h1>
-      <canvas id="canvas" class="mb-5" width="800" height="400" style="border: 1px solid #660000;"></canvas>
-      <div class="mb-5"><div class="row">
+<head>
+  <meta charset="utf-8">
+  <title>Rusted Cart Pole: WebAssembly Demo</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+
+<body>
+
+  <main class="container mb-3">
+    <h1 class="my-5">Rusted Cart Pole: WebAssembly Demo</h1>
+    <div class="mb-5">
+      <p class="lead">
+        A simple Rust+Wasm+Tensorflow.js demo. Sources found at
+        <a href="https://github.com/holli/rusted_cart_pole/">https://github.com/holli/rusted_cart_pole/</a>.
+      </p>
+      <p>
+        The repo is an example of making environment for machine learning with Rust and using different languages to
+        interact with the environment.
+      </p>
+      <p>
+        It will take about 300 episodes to get enough samples to get to a decent level. Switch to "Fast Train"
+        for few minutes and then to "Eval & Show". You can also play yourself and the machine learns to imitate your
+        moves.
+      </p>
+    </div>
+    <canvas id="canvas" class="mb-5" width="800" height="400" style="border: 1px solid #660000;"></canvas>
+    <div class="">
+      <div class="row">
         <div class="col-2" id="ui_type_buttons">
-          <button id='ui_type_user' class="btn btn-outline-primary mb-2">User Playing</button><br/>
-          <button id='ui_type_train_show' class="btn btn-outline-primary mb-2">Train & Show</button><br/>
-          <button id='ui_type_train' class="btn btn-outline-primary mb-2">Fast Train</button><br/>
-          <button id='ui_type_eval' class="btn btn-outline-primary mb-2">Eval & Show</button><br/>
+          <button id='ui_type_user' class="btn btn-outline-primary mb-2">User Playing</button><br />
+          <button id='ui_type_train_show' class="btn btn-outline-primary mb-2">Train & Show</button><br />
+          <button id='ui_type_train' class="btn btn-outline-primary mb-2">Fast Train</button><br />
+          <button id='ui_type_eval' class="btn btn-outline-primary mb-2">Eval & Show</button><br />
           <button id='ui_type_pause' class="btn btn-outline-primary mb-2">Pause</button>
         </div>
-        <div class="col-5" id="console">
-
+        <div class="col-5" id="console" style="min-height: 290px;">
         </div>
         <div class="col-5">
           <div id="vis-container" style="height: 200px;"></div>
         </div>
-      </div></div>
-    </main>
+      </div>
+    </div>
+  </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.1.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.1.0/dist/tfjs-vis.umd.min.js"></script>
+  <hr class="mb-3" />
 
-    <script src="./bootstrap.js"></script>
-  </body>
+  <div class="container mb-5">
+    <div class="alert alert-secondary">
+      <ul>
+        <li>Commands to run this example:
+          <ul>
+            <li>Follow instructions in the <a href="https://github.com/holli/rusted_cart_pole/">github-repo</a></li>
+            <li>wasm-pack build</li>
+            <li>cd www && npm install && npm start</li>
+            <li>Go to http://localhost:8080/</li>
+          </ul>
+        </li>
+        <li>Sources
+          <ul>
+            <li>
+              CartPole environment and drawing is coded in Rust:
+              <a href="https://github.com/holli/rusted_cart_pole/blob/master/src/cart_pole.rs">src/cart_pole.rs</a>
+            </li>
+            <li>
+              Machine Learning things are done with Tensorflow.js. See implementation at
+              <a href="https://github.com/holli/rusted_cart_pole/blob/master/www/index.js">www/index.js</a>
+            </li>
+          </ul>
+        <li>
+          Rust Wasm links:
+          <ul>
+            <li><a href="https://rustwasm.github.io/docs/book/">https://rustwasm.github.io/docs/book/</a>,
+            </li>
+            <li><a
+                href="https://github.com/rustwasm/wasm-pack-template">https://github.com/rustwasm/wasm-pack-template</a>
+            </li>
+          </ul>
+
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.1.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.1.0/dist/tfjs-vis.umd.min.js"></script>
+
+  <script src="./bootstrap.js"></script>
+</body>
+
 </html>
