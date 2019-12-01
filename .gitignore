@@ -16,4 +16,6 @@ tmp/
 www/.bin
 www/pkg
 www/node_modules
+www/dist
+
 

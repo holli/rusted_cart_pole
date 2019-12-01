@@ -131,14 +131,20 @@ impl CartPole {
         let pole_length = 100.0;
         let pole_x = pole_length * self.pole_angle.sin();
         let pole_y = pole_length * self.pole_angle.cos();
+        let pole_width_x = 0.5 * self.pole_angle.cos();
+        let pole_width_y = 0.5 * self.pole_angle.sin();
 
         let points = [
-            (x as i32, y as i32),
-            ((x + pole_x) as i32, (y - pole_y) as i32),
+            ((x - pole_width_x) as i32, (y - pole_width_y) as i32),
+            ((x + pole_width_x) as i32, (y + pole_width_y) as i32),
+            ((x + pole_x + pole_width_x) as i32, (y - pole_y + pole_width_y) as i32),
+            ((x + pole_x - pole_width_x) as i32, (y - pole_y - pole_width_y) as i32),
+            ((x - pole_width_x) as i32, (y - pole_width_y) as i32),
         ];
         root.draw(&PathElement::new(
             points.to_vec(),
-            Into::<ShapeStyle>::into(&RGBColor(160, 80, 0)).stroke_width(4),
+            // Into::<ShapeStyle>::into(&RGBColor(160, 80, 0)).stroke_width(4), // would been better but wasm plotter backend didn't support this
+            Into::<ShapeStyle>::into(&RGBColor(160, 80, 0)),
         ))?;
 
         Ok(())
