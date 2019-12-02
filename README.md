@@ -3,7 +3,7 @@
 An example of an environment for machine learning programmed with Rust and using different languages to interact with the environment.
 
 - WebAssembly & Tensorflow.js:
-  - **Live example: https://holli.github.io/rusted_cart_pole/ **
+  - **Live example: https://holli.github.io/rusted_cart_pole/**
   - [www/index.js](https://github.com/holli/rusted_cart_pole/tree/master/)
 - Python & Pytorch: [examples/python_pytorch.py](https://github.com/holli/rusted_cart_pole/blob/master/examples/python_pytorch.py)
 
